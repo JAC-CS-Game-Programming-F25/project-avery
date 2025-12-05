@@ -83,8 +83,6 @@ The core gameplay involves linking objects, transferring motion or heat, and usi
 
 ### 🧵 Wireframes
 
-> [!note]
-> Your wireframes don't have to be super polished. They can even be black/white and hand drawn. I'm just looking for a rough idea about what you're visualizing.
 
-![Main Menu]()
-- TBD 
+![Tutorial](./assets/images/TutorialLevel.jpeg)
+
