@@ -7,20 +7,20 @@
 			"height": 48
 		},
 		{
-			"name": "mario",
-			"path": "./assets/images/mario.png",
+			"name": "schoolGirl3Idle",
+			"path": "./assets/images/Girl_3/Idle.png",
 			"width": 1004,
 			"height": 3618
 		},
-		{
-			"name": "luigi",
-			"path": "./assets/images/luigi.png",
+				{
+			"name": "schoolGirl1Walk",
+			"path": "./assets/images/Girl_3/Idle.png",
 			"width": 1004,
 			"height": 3618
 		},
 		{
 			"name": "background",
-			"path": "./assets/images/background.png",
+			"path": "./assets/images/medievalBackground.webp",
 			"width": 512,
 			"height": 432
 		}

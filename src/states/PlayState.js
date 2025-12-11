@@ -13,204 +13,157 @@ import MusicName from '../enums/MusicName.js';
  * @extends State
  */
 export default class PlayState extends State {
-	/**
-	 * Creates a new PlayState instance.
-	 * @param {Object} mapDefinition - The definition object for the game map.
-	 */
-	constructor(mapDefinition) {
-		super();
+    constructor(mapDefinition) {
+        super();
 
-		this.map = new Map(mapDefinition);
-		this.player = new Player(50, 150, 16, 24, this.map);
-		this.camera = new Camera(
-			this.player,
-			canvas.width,
-			canvas.height,
-			this.map.width * Tile.SIZE,
-			this.map.height * Tile.SIZE
-		);
+        this.map = new Map(mapDefinition);
+        this.player = new Player(50, 150, this.map);
+        this.camera = new Camera(
+            this.player,
+            canvas.width,
+            canvas.height,
+            this.map.width * Tile.SIZE,
+            this.map.height * Tile.SIZE
+        );
 
-		// Initialize debug tools
-		this.debug = new Debug();
+        this.debug = new Debug();
 
-		// Load background image
-		this.backgroundImage = images.get(ImageName.Background);
+        // Background image pulled from Images system
+        this.backgroundImage = images.get(ImageName.Background);
 
-		// Set up parallax layers for background
-		this.parallaxLayers = [
-			{ image: this.backgroundImage, speedX: 0.04, speedY: 0.1 },
-		];
+        // Parallax background layers
+        this.parallaxLayers = [
+            { image: this.backgroundImage, speedX: 0.04, speedY: 0.1 },
+        ];
 
-		sounds.play(MusicName.Overworld);
-	}
+        sounds.play(MusicName.Overworld);
+    }
 
-	/**
-	 * Updates the play state.
-	 * @param {number} dt - The time passed since the last update.
-	 */
-	update(dt) {
-		timer.update(dt);
-		this.debug.update();
-		this.map.update(dt);
-		this.camera.update(dt);
-		this.player.update(dt);
-		this.map.checkPlatformCollisions(this.player);
-	}
+    update(dt) {
+        timer.update(dt);
+        this.debug.update();
+        this.map.update(dt);
+        this.camera.update(dt);
 
-	/**
-	 * Renders the play state.
-	 * @param {CanvasRenderingContext2D} context - The rendering context.
-	 */
-	render(context) {
-		this.camera.applyTransform(context);
+        this.player.update(dt);
+        this.map.checkPlatformCollisions(this.player);
+    }
 
-		if (!debugOptions.mapGrid) {
-			this.renderParallaxBackground();
-		}
+    render(context) {
+        this.camera.applyTransform(context);
 
-		this.map.render(context);
-		this.player.render(context);
+        if (!debugOptions.mapGrid) {
+            this.renderParallaxBackground(context);
+        }
 
-		this.camera.resetTransform(context);
+        this.map.render(context);
+        this.player.render(context);
 
-		if (debugOptions.cameraCrosshair) {
-			this.renderCameraGuidelines(context);
-			this.renderLookahead(context);
-		}
+        this.camera.resetTransform(context);
 
-		if (debugOptions.watchPanel) {
-			this.setDebugPanel();
-		} else {
-			this.debug.unwatch('Map');
-			this.debug.unwatch('Camera');
-			this.debug.unwatch('Player');
-			this.debug.unwatch('Goombas');
-			this.debug.unwatch('Coins');
-		}
-	}
+        if (debugOptions.cameraCrosshair) {
+            this.renderCameraGuidelines(context);
+            this.renderLookahead(context);
+        }
 
-	/**
-	 * Renders the parallax background.
-	 */
-	renderParallaxBackground() {
-		this.parallaxLayers.forEach((layer) => {
-			const parallaxX = -this.camera.position.x * layer.speedX;
-			const parallaxY = -this.camera.position.y * layer.speedY;
+        if (debugOptions.watchPanel) {
+            this.setDebugPanel();
+        } else {
+            this.debug.unwatch('Map');
+            this.debug.unwatch('Camera');
+            this.debug.unwatch('Player');
+            this.debug.unwatch('Goombas');
+            this.debug.unwatch('Coins');
+        }
+    }
 
-			// Calculate repetitions needed to cover the screen
-			const repetitionsX =
-				Math.ceil(canvas.width / layer.image.width) + 1;
-			const repetitionsY =
-				Math.ceil(canvas.height / layer.image.height) + 1;
+    enter() {}
+    exit() {}
 
-			for (let y = 0; y < repetitionsY; y++) {
-				for (let x = 0; x < repetitionsX; x++) {
-					const drawX =
-						(parallaxX % layer.image.width) + x * layer.image.width;
-					const drawY =
-						(parallaxY % layer.image.height) +
-						y * layer.image.height;
-					layer.image.render(drawX, drawY);
-				}
-			}
-		});
-	}
+    /**
+     * Parallax background — FIXED to use `render(context, x, y)`
+     */
+    renderParallaxBackground(context) {
+        this.parallaxLayers.forEach((layer) => {
+            const parallaxX = -this.camera.position.x * layer.speedX;
+            const parallaxY = -this.camera.position.y * layer.speedY;
 
-	/**
-	 * Renders the camera lookahead crosshair for debugging.
-	 * @param {CanvasRenderingContext2D} context - The rendering context.
-	 */
-	renderLookahead(context) {
-		const lookaheadPos = this.camera.getLookaheadPosition();
-		const size = 10;
+            const repetitionsX = Math.ceil(canvas.width / layer.image.width) + 1;
+            const repetitionsY = Math.ceil(canvas.height / layer.image.height) + 1;
 
-		context.strokeStyle = 'rgba(255, 0, 0, 0.8)';
-		context.lineWidth = 2;
+            for (let y = 0; y < repetitionsY; y++) {
+                for (let x = 0; x < repetitionsX; x++) {
+                    const drawX = (parallaxX % layer.image.width) + x * layer.image.width;
+                    const drawY = (parallaxY % layer.image.height) + y * layer.image.height;
 
-		// Draw crosshair
-		context.beginPath();
-		context.moveTo(lookaheadPos.x - size, lookaheadPos.y);
-		context.lineTo(lookaheadPos.x + size, lookaheadPos.y);
-		context.moveTo(lookaheadPos.x, lookaheadPos.y - size);
-		context.lineTo(lookaheadPos.x, lookaheadPos.y + size);
-		context.stroke();
+                    // ✔ FIX — call Graphic.render() correctly
+                    layer.image.render(context, drawX, drawY);
+                }
+            }
+        });
+    }
 
-		// Draw circle
-		context.beginPath();
-		context.arc(lookaheadPos.x, lookaheadPos.y, size / 2, 0, Math.PI * 2);
-		context.stroke();
-	}
+    renderLookahead(context) {
+        const lookaheadPos = this.camera.getLookaheadPosition();
+        const size = 10;
 
-	/**
-	 * Renders camera guidelines for debugging.
-	 * @param {CanvasRenderingContext2D} context - The rendering context.
-	 */
-	renderCameraGuidelines(context) {
-		const centerX = canvas.width / 2;
-		const centerY = canvas.height / 2;
+        context.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+        context.lineWidth = 2;
 
-		context.setLineDash([5, 5]);
-		context.lineWidth = 1;
-		context.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        context.beginPath();
+        context.moveTo(lookaheadPos.x - size, lookaheadPos.y);
+        context.lineTo(lookaheadPos.x + size, lookaheadPos.y);
+        context.moveTo(lookaheadPos.x, lookaheadPos.y - size);
+        context.lineTo(lookaheadPos.x, lookaheadPos.y + size);
+        context.stroke();
 
-		// Draw vertical line
-		context.beginPath();
-		context.moveTo(centerX, 0);
-		context.lineTo(centerX, canvas.height);
-		context.stroke();
+        context.beginPath();
+        context.arc(lookaheadPos.x, lookaheadPos.y, size / 2, 0, Math.PI * 2);
+        context.stroke();
+    }
 
-		// Draw horizontal line
-		context.beginPath();
-		context.moveTo(0, centerY);
-		context.lineTo(canvas.width, centerY);
-		context.stroke();
+    renderCameraGuidelines(context) {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
 
-		context.setLineDash([]);
-	}
+        context.setLineDash([5, 5]);
+        context.lineWidth = 1;
+        context.strokeStyle = 'rgba(255, 255, 255, 0.9)';
 
-	/**
-	 * Sets up the debug panel with various game object properties.
-	 */
-	setDebugPanel() {
-		this.debug.watch('Map', {
-			width: () => this.map.width,
-			height: () => this.map.height,
-		});
+        context.beginPath();
+        context.moveTo(centerX, 0);
+        context.lineTo(centerX, canvas.height);
+        context.stroke();
 
-		this.debug.watch('Camera', {
-			position: () =>
-				`(${this.camera.position.x.toFixed(
-					2
-				)}, ${this.camera.position.y.toFixed(2)})`,
-			lookahead: () =>
-				`(${this.camera.lookahead.x.toFixed(
-					2
-				)}, ${this.camera.lookahead.y.toFixed(2)})`,
-		});
+        context.beginPath();
+        context.moveTo(0, centerY);
+        context.lineTo(canvas.width, centerY);
+        context.stroke();
 
-		this.debug.watch('Player', {
-			position: () =>
-				`(${this.player.position.x.toFixed(
-					2
-				)}, ${this.player.position.y.toFixed(2)})`,
-			velocity: () =>
-				`(${this.player.velocity.x.toFixed(
-					2
-				)}, ${this.player.velocity.y.toFixed(2)})`,
-			isOnGround: () => this.player.isOnGround,
-			isBig: () => this.player.isBig,
-			state: () => this.player.stateMachine.currentState.name,
-		});
+        context.setLineDash([]);
+    }
 
-		this.debug.watch('Goombas', {
-			count: () => this.map.goombas.length,
-		});
-		this.debug.watch('Coins', {
-			count: () => this.map.coins.length,
-		});
+    setDebugPanel() {
+        this.debug.watch('Map', {
+            width: () => this.map.width,
+            height: () => this.map.height,
+        });
 
-		this.debug.watch('Mushrooms', {
-			count: () => this.map.mushrooms.length,
-		});
-	}
+        this.debug.watch('Camera', {
+            position: () =>
+                `(${this.camera.position.x.toFixed(2)}, ${this.camera.position.y.toFixed(2)})`,
+            lookahead: () =>
+                `(${this.camera.lookahead.x.toFixed(2)}, ${this.camera.lookahead.y.toFixed(2)})`,
+        });
+
+        this.debug.watch('Player', {
+            position: () =>
+                `(${this.player.position.x.toFixed(2)}, ${this.player.position.y.toFixed(2)})`,
+            velocity: () =>
+                `(${this.player.velocity.x.toFixed(2)}, ${this.player.velocity.y.toFixed(2)})`,
+            isOnGround: () => this.player.isOnGround,
+            isBig: () => this.player.isBig,
+            state: () => this.player.stateMachine.currentState.name,
+        });
+    }
 }
