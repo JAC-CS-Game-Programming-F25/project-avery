@@ -19,31 +19,27 @@ export default class Platform extends Entity {
     }
 
     onCollideWithPlayer(player) {
-        // Snap player on top
-        player.position.y = this.position.y - player.dimensions.y;
+        player.position.y =
+            this.position.y - player.hitboxOffset.y - player.hitboxHeight;
+
         player.velocity.y = 0;
         player.isOnGround = true;
-
-        this.playerWasOn = true;
-
-        // Landing transition
-        if (player.stateMachine.currentState.name === PlayerStateName.Falling) {
-            player.stateMachine.change(PlayerStateName.Idling);
-        }
     }
 
     checkCollision(player) {
-        const playerBottom = player.position.y + player.dimensions.y;
-        const tolerance = 8;   // increased for 128px sprite
-        
+        const tolerance = 6;
+
+        const playerBottom = player.hitboxBottom;
+        const playerTop = player.hitboxY;
+
         const horizontallyOverlapping =
-            player.position.x + player.dimensions.x > this.position.x &&
-            player.position.x < this.position.x + this.dimensions.x;
+            player.hitboxRight > this.position.x &&
+            player.hitboxX < this.position.x + this.dimensions.x;
 
         const verticallyAligned =
             player.velocity.y >= 0 &&
-            playerBottom >= this.position.y - tolerance &&
-            playerBottom <= this.position.y + this.dimensions.y;
+            playerBottom >= this.position.y &&
+            playerBottom <= this.position.y + tolerance;
 
         return horizontallyOverlapping && verticallyAligned;
     }

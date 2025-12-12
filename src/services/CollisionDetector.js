@@ -2,148 +2,99 @@ import Entity from '../entities/Entity.js';
 import Map from './Map.js';
 
 /**
- * Handles collision detection for entities in the game world.
+ * Handles tile collision using ENTITY HITBOX (offset + size),
+ * not sprite dimensions.
  */
 export default class CollisionDetector {
-	/**
-	 * Creates a new CollisionDetector.
-	 * @param {Map} map - The game map containing collision information.
-	 */
 	constructor(map) {
 		this.map = map;
 	}
 
-	/**
-	 * Checks and resolves horizontal collisions for an entity.
-	 * @param {Entity} entity - The entity to check collisions for.
-	 */
 	checkHorizontalCollisions(entity) {
 		const tileSize = this.map.tileSize;
-		const tileLeft = Math.floor(entity.position.x / tileSize);
-		const tileRight = Math.floor(
-			(entity.position.x + entity.dimensions.x) / tileSize
-		);
-		const tileTop = Math.floor(entity.position.y / tileSize);
-		const tileBottom = Math.floor(
-			(entity.position.y + entity.dimensions.y - 1) / tileSize
-		);
+
+		// Use HITBOX bounds
+		const left = entity.hitboxX;
+		const right = entity.hitboxRight;
+		const top = entity.hitboxY;
+		const bottom = entity.hitboxBottom - 1; // -1 so exact edges behave nicely
+
+		const tileTop = Math.floor(top / tileSize);
+		const tileBottom = Math.floor(bottom / tileSize);
 
 		if (entity.velocity.x > 0) {
-			// Moving right
+			// Moving RIGHT: test the column we are entering (right edge)
+			const tileRight = Math.floor(right / tileSize);
+
 			if (this.isSolidTileInColumn(tileRight, tileTop, tileBottom)) {
-				// Collision on the right side
-				entity.position.x = tileRight * tileSize - entity.dimensions.x;
+				// Push player left so hitbox right sits flush with tile left edge
+				const tileLeftEdge = tileRight * tileSize;
+				entity.position.x = tileLeftEdge - (entity.hitboxOffset.x + entity.hitboxWidth);
 				entity.velocity.x = 0;
 			}
 		} else if (entity.velocity.x < 0) {
-			// Moving left
+			// Moving LEFT: test the column we are entering (left edge)
+			const tileLeft = Math.floor(left / tileSize);
+
 			if (this.isSolidTileInColumn(tileLeft, tileTop, tileBottom)) {
-				// Collision on the left side
-				entity.position.x = (tileLeft + 1) * tileSize;
+				// Push player right so hitbox left sits flush with tile right edge
+				const tileRightEdge = (tileLeft + 1) * tileSize;
+				entity.position.x = tileRightEdge - entity.hitboxOffset.x;
 				entity.velocity.x = 0;
 			}
 		}
 	}
 
-	/**
-	 * Checks and resolves vertical collisions for an entity.
-	 * @param {Entity} entity - The entity to check collisions for.
-	 */
 	checkVerticalCollisions(entity) {
 		const tileSize = this.map.tileSize;
-		const tileLeft = Math.floor(entity.position.x / tileSize);
-		const tileRight = Math.floor(
-			(entity.position.x + entity.dimensions.x - 1) / tileSize
-		);
-		const tileTop = Math.floor(entity.position.y / tileSize);
-		const tileBottom = Math.floor(
-			(entity.position.y + entity.dimensions.y) / tileSize
-		);
 
+		// Use HITBOX bounds
+		const left = entity.hitboxX;
+		const right = entity.hitboxRight - 1; // -1 so exact edges behave nicely
+		const top = entity.hitboxY;
+		const bottom = entity.hitboxBottom;
+
+		const tileLeft = Math.floor(left / tileSize);
+		const tileRight = Math.floor(right / tileSize);
+
+		// IMPORTANT: do not force isOnGround false here if Map/platform system handles it
+		// But if tile collision is your ground source, keep this:
 		entity.isOnGround = false;
 
 		if (entity.velocity.y >= 0) {
-			// Falling or on ground
+			// Falling / grounded: check row below bottom edge
+			const tileBottom = Math.floor(bottom / tileSize);
+
 			if (this.isSolidTileInRow(tileBottom, tileLeft, tileRight)) {
-				// Collision below
-				entity.position.y = tileBottom * tileSize - entity.dimensions.y;
+				// Snap so hitbox bottom sits on tile top edge
+				const tileTopEdge = tileBottom * tileSize;
+				entity.position.y = tileTopEdge - (entity.hitboxOffset.y + entity.hitboxHeight);
 				entity.velocity.y = 0;
 				entity.isOnGround = true;
 			}
-		} else if (entity.velocity.y < 0) {
-			// Jumping or moving upwards
-			if (
-				this.checkBlockCollisionFromBelow(
-					entity,
-					tileTop,
-					tileLeft,
-					tileRight
-				) ||
-				this.isSolidTileInRow(tileTop, tileLeft, tileRight)
-			) {
-				// Collision above
-				entity.position.y = (tileTop + 1) * tileSize;
+		} else {
+			// Moving UP: check row above top edge
+			const tileTop = Math.floor(top / tileSize);
+
+			if (this.isSolidTileInRow(tileTop, tileLeft, tileRight)) {
+				// Snap so hitbox top sits under tile bottom edge
+				const tileBottomEdge = (tileTop + 1) * tileSize;
+				entity.position.y = tileBottomEdge - entity.hitboxOffset.y;
 				entity.velocity.y = 0;
 			}
 		}
 	}
 
-	/**
-	 * Checks if there's a solid tile in a vertical column of tiles.
-	 * @param {number} x - The x-coordinate of the column to check.
-	 * @param {number} yStart - The starting y-coordinate of the column.
-	 * @param {number} yEnd - The ending y-coordinate of the column.
-	 * @returns {boolean} True if a solid tile is found, false otherwise.
-	 */
 	isSolidTileInColumn(x, yStart, yEnd) {
 		for (let y = yStart; y <= yEnd; y++) {
-			if (this.map.isSolidTileAt(x, y)) {
-				return true;
-			}
+			if (this.map.isSolidTileAt(x, y)) return true;
 		}
 		return false;
 	}
 
-	/**
-	 * Checks if there's a solid tile in a horizontal row of tiles.
-	 * @param {number} y - The y-coordinate of the row to check.
-	 * @param {number} xStart - The starting x-coordinate of the row.
-	 * @param {number} xEnd - The ending x-coordinate of the row.
-	 * @returns {boolean} True if a solid tile is found, false otherwise.
-	 */
 	isSolidTileInRow(y, xStart, xEnd) {
 		for (let x = xStart; x <= xEnd; x++) {
-			if (this.map.isSolidTileAt(x, y)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Checks for collision with a block from below.
-	 * @param {Entity} entity - The entity to check collisions for.
-	 * @param {number} tileY - The y-coordinate of the tile row to check.
-	 * @param {number} xStart - The starting x-coordinate of the row.
-	 * @param {number} xEnd - The ending x-coordinate of the row.
-	 * @returns {boolean} True if a collision with a block occurred, false otherwise.
-	 */
-	checkBlockCollisionFromBelow(entity, tileY, xStart, xEnd) {
-		for (let x = xStart; x <= xEnd; x++) {
-			const block = this.map.getBlockAt(
-				x * this.map.tileSize,
-				tileY * this.map.tileSize
-			);
-			if (block && !block.isHit) {
-				// Check if the entity's top is close to the block's bottom
-				const entityTop = entity.position.y;
-				const blockBottom = (tileY + 1) * this.map.tileSize;
-				if (Math.abs(entityTop - blockBottom) < 5) {
-					// 5 pixels threshold
-					block.hit();
-					return true;
-				}
-			}
+			if (this.map.isSolidTileAt(x, y)) return true;
 		}
 		return false;
 	}

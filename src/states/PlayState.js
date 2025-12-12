@@ -7,7 +7,8 @@ import Player from '../entities/player/Player.js';
 import Tile from '../services/Tile.js';
 import ImageName from '../enums/ImageName.js';
 import MusicName from '../enums/MusicName.js';
-
+import SympathyPanel from '../user-interface/SympathyPanel.js';
+import SympathyManager from '../services/SympathyManager.js';
 /**
  * Represents the main play state of the game.
  * @extends State
@@ -36,6 +37,12 @@ export default class PlayState extends State {
             { image: this.backgroundImage, speedX: 0.04, speedY: 0.1 },
         ];
 
+        this.sympathyManager = new SympathyManager(this.player);
+        this.sympathyPanel = new SympathyPanel(
+            this.player,
+            this.sympathyManager
+        );
+
         sounds.play(MusicName.Overworld);
     }
 
@@ -47,6 +54,8 @@ export default class PlayState extends State {
 
         this.player.update(dt);
         this.map.checkPlatformCollisions(this.player);
+        this.sympathyManager.update(dt);
+
     }
 
     render(context) {
@@ -60,6 +69,8 @@ export default class PlayState extends State {
         this.player.render(context);
 
         this.camera.resetTransform(context);
+
+        this.sympathyPanel.render();
 
         if (debugOptions.cameraCrosshair) {
             this.renderCameraGuidelines(context);

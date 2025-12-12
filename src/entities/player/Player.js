@@ -26,6 +26,13 @@ export default class Player extends Entity {
         this.animations = {};
         this.currentAnimation = null;
 
+        this.hitboxSize.set(20, 35);     // torso + legs
+        this.hitboxOffset.set(22, 30);  
+        //sympathy stuff
+        this.maxConcentration = 100;
+        this.currentConcentration = this.maxConcentration
+
+
         this.loadSprites();
 
         this.stateMachine = new StateMachine();
@@ -57,31 +64,46 @@ export default class Player extends Entity {
     }
 
    render(ctx) {
-    if (!this.loaded || !this.currentAnimation) return;
+        super.render(ctx)
+        if (!this.loaded || !this.currentAnimation) return;
 
-    ctx.save();
+        ctx.save();
 
-    const scale = this.scale;
-    const frame = this.currentAnimation.getCurrentFrame();
-    const drawW = frame.width * scale;  
+        const scale = this.scale;
+        const frame = this.currentAnimation.getCurrentFrame();
+        const drawW = frame.width * scale;  
 
-    if (this.facingRight) {
-        ctx.translate(this.position.x, this.position.y);
-        ctx.scale(scale, scale);
-        frame.render(ctx, 0, 0);
-    } else {
-        ctx.translate(this.position.x + drawW, this.position.y);
-        ctx.scale(-scale, scale);
-        frame.render(ctx, 0, 0);
+        if (this.facingRight) {
+            ctx.translate(this.position.x, this.position.y);
+            ctx.scale(scale, scale);
+            frame.render(ctx, 0, 0);
+        } else {
+            ctx.translate(this.position.x + drawW, this.position.y);
+            ctx.scale(-scale, scale);
+            frame.render(ctx, 0, 0);
+        }
+
+        ctx.restore();
     }
-
-    ctx.restore();
-}
 
 
 
     setAnimation(name) {
         if (!this.loaded) return;
         this.currentAnimation = this.animations[name] ?? this.animations.idle;
+    }
+
+    canUseSympathy(){
+        return this.currentConcentration > 0;
+    }
+    consumeConcentration(amount){
+        if (!this.canUseSympathy()) return;
+        this.currentConcentration = Math.max(0,this.currentConcentration - amount)
+    }
+    restoreConcentration(amount){
+        this.currentConcentration = Math.min(this.maxConcentration,this.currentConcentration + amount)
+    }
+    resetConcentration(){
+        this.currentConcentration = this.maxConcentration
     }
 }

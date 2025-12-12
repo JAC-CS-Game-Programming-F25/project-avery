@@ -44,12 +44,16 @@ export default class Map {
 	}
 
 	checkPlatformCollisions(player) {
+		let grounded = false;
+
 		this.platforms.forEach((platform) => {
 			if (platform.checkCollision(player)) {
 				platform.onCollideWithPlayer(player);
+				grounded = true;
 			}
-			platform.updatePlayerStatus(player);
 		});
+
+		player.isOnGround = grounded;
 	}
 
 	/**

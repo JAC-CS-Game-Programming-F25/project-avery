@@ -85,6 +85,7 @@ export const debugOptions = {
     cameraCrosshair: false,
     playerCollision: false,
     watchPanel: false,
+    hitboxes: true,
 };
 
 export function toggleDebugOption(option) {

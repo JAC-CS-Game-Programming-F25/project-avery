@@ -39,13 +39,15 @@ export default class PlayerState extends State {
         this.collisionDetector.checkVerticalCollisions(this.player);
 
         // Clamp to map bounds
+        const maxX =
+            this.player.map.width * 16 -
+            (this.player.hitboxOffset.x + this.player.hitboxWidth);
+
         this.player.position.x = Math.max(
-            0,
-            Math.min(
-                Math.round(this.player.position.x),
-                this.player.map.width * 16 - this.player.dimensions.x
-            )
+            -this.player.hitboxOffset.x,
+            Math.min(Math.round(this.player.position.x), maxX)
         );
+
 
         this.player.position.y = Math.round(this.player.position.y);
     }
