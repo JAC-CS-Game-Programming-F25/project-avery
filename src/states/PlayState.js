@@ -2,13 +2,14 @@ import State from '../../lib/State.js';
 import Debug from '../../lib/Debug.js';
 import Map from '../services/Map.js';
 import Camera from '../services/Camera.js';
-import { canvas, debugOptions, images, sounds, timer } from '../globals.js';
+import { canvas, debugOptions, images, input, sounds, timer } from '../globals.js';
 import Player from '../entities/player/Player.js';
 import Tile from '../services/Tile.js';
 import ImageName from '../enums/ImageName.js';
 import MusicName from '../enums/MusicName.js';
 import SympathyPanel from '../user-interface/SympathyPanel.js';
 import SympathyManager from '../services/SympathyManager.js';
+import Input from '../../lib/Input.js';
 /**
  * Represents the main play state of the game.
  * @extends State
@@ -49,14 +50,30 @@ export default class PlayState extends State {
     update(dt) {
         timer.update(dt);
         this.debug.update();
+
+        // --- Sympathy Mode (freeze world) ---
+        if (this.sympathyManager.active) {
+            this.sympathyManager.update(dt);
+            return;
+        }
+
+        // --- Normal gameplay ---
         this.map.update(dt);
         this.camera.update(dt);
 
+        this.player.isOnGround = false;
         this.player.update(dt);
-        this.map.checkPlatformCollisions(this.player);
+
+        this.map.resolveGameObjectCollisions(this.player);
         this.sympathyManager.update(dt);
 
+        if (input.isKeyPressed(Input.KEYS.ENTER)) {
+            this.stateMachine.change('link', {
+                returnState: 'play'
+            });
+        }
     }
+
 
     render(context) {
         this.camera.applyTransform(context);
@@ -83,8 +100,6 @@ export default class PlayState extends State {
             this.debug.unwatch('Map');
             this.debug.unwatch('Camera');
             this.debug.unwatch('Player');
-            this.debug.unwatch('Goombas');
-            this.debug.unwatch('Coins');
         }
     }
 
@@ -114,7 +129,64 @@ export default class PlayState extends State {
         });
     }
 
-    renderLookahead(context) {
+    renderSympathySelection(ctx) {
+        const mgr = this.sympathyManager;
+        if (!mgr.active || mgr.viableObjects.length === 0) return;
+
+        ctx.save();
+        ctx.lineWidth = 2;
+
+        // Current selection
+        const current = mgr.viableObjects[mgr.selectionIndex];
+        ctx.strokeStyle = 'cyan';
+        ctx.strokeRect(
+            current.hitboxX,
+            current.hitboxY,
+            current.hitboxWidth,
+            current.hitboxHeight
+        );
+
+        // First selected object (if any)
+        if (mgr.firstSelection) {
+            ctx.strokeStyle = 'yellow';
+            ctx.strokeRect(
+                mgr.firstSelection.hitboxX,
+                mgr.firstSelection.hitboxY,
+                mgr.firstSelection.hitboxWidth,
+                mgr.firstSelection.hitboxHeight
+            );
+        }
+
+        ctx.restore();
+    }
+    renderSympathyLinks(ctx) {
+        const links = this.sympathyManager.links;
+        if (!links || links.length === 0) return;
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(150, 200, 255, 0.7)';
+        ctx.lineWidth = 2;
+
+        for (const link of links) {
+            const a = link.a;
+            const b = link.b;
+
+            ctx.beginPath();
+            ctx.moveTo(
+                a.position.x + a.dimensions.x / 2,
+                a.position.y + a.dimensions.y / 2
+            );
+            ctx.lineTo(
+                b.position.x + b.dimensions.x / 2,
+                b.position.y + b.dimensions.y / 2
+            );
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+        renderLookahead(context) {
         const lookaheadPos = this.camera.getLookaheadPosition();
         const size = 10;
 

@@ -66,21 +66,20 @@ function loadImage(src) {
 // -----------------------
 
 export const objectSpriteConfig = {
-    block: [
-        { x: 48, y: 32, width: 16, height: 16 },
-        { x: 64, y: 32, width: 16, height: 16 },
+    Crate: [
+        { x: 48, y: 0, width: 16, height: 16 },
     ],
     platform: [
         { x: 16, y: 16, width: 16, height: 16 },
     ],
 };
 
+
 /**
  * Loads sprites for objects like blocks, platforms, etc.
  * You MUST wrap parentImage in Graphic() or Sprite.render will crash.
  */
-export function loadObjectSprites(image, configFrames) {
-    const graphic = new Graphic(image);
+export function loadObjectSprites(graphic, configFrames) {
     const sprites = [];
 
     for (const frame of configFrames) {
@@ -95,5 +94,7 @@ export function loadObjectSprites(image, configFrames) {
         );
     }
 
+    console.log("Loaded object sprites:", sprites);
     return sprites;
 }
+

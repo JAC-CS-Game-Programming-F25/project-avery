@@ -26,12 +26,12 @@ export default class Player extends Entity {
         this.animations = {};
         this.currentAnimation = null;
 
-        this.hitboxSize.set(20, 35);     // torso + legs
-        this.hitboxOffset.set(22, 30);  
+        this.hitboxSize.set(10, 35);    
+        this.hitboxOffset.set(27, 30);  
         //sympathy stuff
         this.maxConcentration = 100;
         this.currentConcentration = this.maxConcentration
-
+        this.link = null;
 
         this.loadSprites();
 
@@ -61,6 +61,7 @@ export default class Player extends Entity {
 
         this.stateMachine.update(dt);
         this.currentAnimation.update(dt);
+
     }
 
    render(ctx) {
@@ -94,8 +95,11 @@ export default class Player extends Entity {
     }
 
     canUseSympathy(){
+        console.log("canUseSympathy Called")
+        console.log(this.currentConcentration > 0)
         return this.currentConcentration > 0;
     }
+
     consumeConcentration(amount){
         if (!this.canUseSympathy()) return;
         this.currentConcentration = Math.max(0,this.currentConcentration - amount)

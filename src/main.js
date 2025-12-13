@@ -27,6 +27,7 @@ import {
 	stateMachine,
 } from './globals.js';
 import PlayState from './states/PlayState.js';
+import LinkCreationState from './states/LinkCreationState.js';
 
 // Set the dimensions of the play area.
 canvas.width = CANVAS_WIDTH;
@@ -41,7 +42,14 @@ const mapDefinition = await fetch('./config/tilemap.json').then((response) =>
 );
 
 // Add all the states to the state machine.
-stateMachine.add(GameStateName.Play, new PlayState(mapDefinition));
+const playState = new PlayState(mapDefinition);
+
+stateMachine.add(GameStateName.Play, playState);
+
+stateMachine.add(
+    GameStateName.Link,
+    new LinkCreationState(playState)
+);
 
 stateMachine.change(GameStateName.Play);
 

@@ -1,6 +1,6 @@
 const ImageName = {
 	Tiles: 'tiles',
-	Mario: 'mario',
+	Crates: 'Crates',
 	Background: 'background',
 };
 

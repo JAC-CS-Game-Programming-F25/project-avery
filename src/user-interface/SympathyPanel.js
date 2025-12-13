@@ -65,7 +65,7 @@ export default class SympathyPanel extends Panel {
         const link = this.sympathyManager.activeLink;
         if (!link) return;
 
-        const textX = this.position.x + this.padding;
+        const textX = this.position.x + this.padding + 100;
         const textY = this.position.y + this.padding;
 
         context.fillStyle = "#000";
@@ -78,7 +78,7 @@ export default class SympathyPanel extends Panel {
         );
 
         context.fillText(
-            `Efficiency: ${(link.efficiency * 100).toFixed(0)}%`,
+            `Efficiency: ${(link.similarity * 100).toFixed(0)}%`,
             textX,
             textY + 14
         );
