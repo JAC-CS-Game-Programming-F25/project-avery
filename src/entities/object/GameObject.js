@@ -25,7 +25,7 @@ export default class GameObject extends Entity{
         this.isHighlighted = false;
         this.isSelected = false;
 
-        this.sympathyLink = null;
+        this.sympathyLinkedItem = null;
     }
 
     update(dt){
@@ -110,14 +110,20 @@ export default class GameObject extends Entity{
         return this.width*this.height
     }
 
-   applyForce(force, sourceLink = null) {
+   applyForce(force) {
+        if(this.sympathyLinkedItem){
+            this.sympathyLinkedItem.applySympathyForce(force)
+        }
+        
         this.forces.x += force.x;
         this.forces.y += force.y;
+    }
 
-        if (sourceLink) return;
-
-        if (this.sympathyLink && this.sympathyLink.active) {
-            this.sympathyLink.transferForce(this, force);
+    applySympathyForce(force){
+        if(force.x != 0){
+            console.log("Called")
         }
+        this.forces.x += force.x;
+        this.forces.y += force.y;
     }
 }

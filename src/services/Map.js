@@ -5,6 +5,7 @@ import Layer from './Layer.js';
 import { debugOptions, images } from '../globals.js';
 import GameObject from '../entities/object/GameObject.js'
 import { loadObjectSprites, objectSpriteConfig } from '../../config/SpriteConfig.js';
+import Vector from '../../lib/Vector.js';
 export default class Map {
 	static BACKGROUND_LAYER = 0;
     static COLLISION_LAYER = 1;
@@ -132,10 +133,8 @@ export default class Map {
 					// Push object
 					if (!obj.isStatic) {
 						const pushStrength = 300; // tune this
-						obj.velocity.x = Math.max(
-							obj.velocity.x - pushStrength / obj.mass,
-							-120 // max push speed
-						);
+						obj.applyForce(new Vector(-pushStrength, 0));
+
 					}
 					break;
 				}
@@ -149,10 +148,8 @@ export default class Map {
 
 					if (!obj.isStatic) {
 						const pushStrength = 300;
-						obj.velocity.x = Math.min(
-							obj.velocity.x + pushStrength / obj.mass,
-							120
-						);
+						obj.applyForce(new Vector(pushStrength, 0));
+
 					}
 					break;
 				}

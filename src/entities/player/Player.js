@@ -95,8 +95,6 @@ export default class Player extends Entity {
     }
 
     canUseSympathy(){
-        console.log("canUseSympathy Called")
-        console.log(this.currentConcentration > 0)
         return this.currentConcentration > 0;
     }
 

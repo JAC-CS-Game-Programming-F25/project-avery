@@ -23,21 +23,25 @@ export default class SympathyManager{
 
         this.activeLink = new SympathyLink(obj1, obj2);
 
-        obj1.sympathyLink = this.activeLink;
-        obj2.sympathyLink = this.activeLink;
+        this.activeLink.objectA.sympathyLinkedItem = this.activeLink.objectB;
+        this.activeLink.objectB.sympathyLinkedItem = this.activeLink.objectA;
+
         return true;
     }
 
     breakLink() {
         if (!this.activeLink) return;
+
+        this.activeLink.objectA.sympathyLinkedItem = null;
+        this.activeLink.objectB.sympathyLinkedItem = null;
+
         this.activeLink.break();
         this.activeLink = null;
         this.player.link = null
         for (const obj of this.viableObjects) {
             obj.isSelected = false;
         }
-        // this.activeLink.objectA.sympathyLink = null;
-        // this.activeLink.objectB.sympathyLink = null;
+        
         
         this.exit();
     }
