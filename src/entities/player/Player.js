@@ -113,11 +113,12 @@ export default class Player extends Entity {
     }
 
     canUseSympathy(){
-        return true;
-        // return this.currentConcentration > 0;
+        console.log(this.currentConcentration)
+        return this.currentConcentration > 0;
     }
 
     consumeConcentration(amount){
+        console.log("called")
         if (!this.canUseSympathy()) return;
         this.currentConcentration = Math.max(0,this.currentConcentration - amount)
     }

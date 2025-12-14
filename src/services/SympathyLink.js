@@ -35,8 +35,11 @@ export default class SympathyLink {
     if (!this.active) return;
 
     // Drain player concentration
+    console.log(`dt ${dt}`)
+    console.log(`Method:  ${this.getConcentrationDrainRate()}`)
     const drain = this.getConcentrationDrainRate() * dt;
-    player.consumeConcentration(drain);
+    console.log("drain",drain)
+    player.consumeConcentration(drain),drain;
 
     if (!player.canUseSympathy()) {
       this.break();
@@ -89,26 +92,30 @@ export default class SympathyLink {
 
   getConcentrationDrainRate() {
     // Worse matches drain faster
+    console.log(`sim ${this.similarity}`)
     return SympathyLink.BASE_DRAIN * (1 / this.similarity);
   }
 
   _calculateSimilarity() {
     let score = 1;
+    console.log(`score ${score}`)
 
     // Mass similarity
     const massDiff = Math.abs(this.objectA.mass - this.objectB.mass);
     score -= massDiff * 0.01;
+    console.log(`score ${score}`)
 
     // Temperature similarity
     const tempDiff = Math.abs(this.objectA.temp - this.objectB.temp);
     score -= tempDiff * 0.005;
+    console.log(`score ${score}`)
 
     // Size similarity
-    const sizeDiff = Math.abs(
-      this.objectA.calculateSize() - this.objectB.calculateSize()
-    );
-    score -= sizeDiff * 0.0001;
-
+    // const sizeDiff = Math.abs(
+    //   this.objectA.calculateSize() - this.objectB.calculateSize()
+    // );
+    // score -= sizeDiff * 0.0001;
+    console.log(`score ${score}`)
     return Math.max(
       SympathyLink.LOWER_SIM_CLAMP,
       Math.min(score, SympathyLink.UPPER_SIM_CLAMP)
