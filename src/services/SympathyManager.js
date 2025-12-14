@@ -35,12 +35,15 @@ export default class SympathyManager{
     breakLink() {
         if (!this.activeLink) return;
 
-        this.activeLink.objectA.sympathyLinkedItem = null;
-        this.activeLink.objectB.sympathyLinkedItem = null;
+        const { objectA, objectB } = this.activeLink;
+
+        objectA.sympathyLinkedItem = null;
+        objectB.sympathyLinkedItem = null;
+        objectA.link = null;
+        objectB.link = null;
 
         this.activeLink.break();
         this.activeLink = null;
-        this.player.link = null
         for (const obj of this.viableObjects) {
             obj.isSelected = false;
         }

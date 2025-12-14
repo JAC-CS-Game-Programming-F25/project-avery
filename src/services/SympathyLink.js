@@ -18,6 +18,18 @@ export default class SympathyLink {
         this.active = true;
     }
 
+    transferHeat(source, deltaTemp) {
+        if (!this.active) return;
+
+        const target =
+            source === this.objectA
+                ? this.objectB
+                : this.objectA;
+
+        const transferred = deltaTemp * this.similarity;
+
+        target.temp += transferred;
+    }
     /**
      * This calculates the similarity between the two objects based on their properties, it returns a value between 1 and 0
      */

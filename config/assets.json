@@ -2,7 +2,7 @@
 	"images": [
 		{
 			"name": "tiles",
-			"path": "./assets/images/tiles.png",
+			"path": "./assets/images/SpriteSheets/tilesSpritesheet.png",
 			"width": 144,
 			"height": 48
 		},

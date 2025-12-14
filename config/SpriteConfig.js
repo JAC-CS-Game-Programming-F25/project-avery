@@ -5,22 +5,22 @@ import Sprite from "../lib/Sprite.js";
 
 export const playerSpriteConfig = {
     idle: {
-        path: "./assets/images/Wizard/Idle.png",
+        path: "./assets/images/SpriteSheets/Wizard/Idle.png",
         frameWidth: 128,
         frameHeight: 128,
     },
     walk: {
-        path: "./assets/images/Wizard/Walk.png",
+        path: "./assets/images/SpriteSheets/Wizard/Walk.png",
         frameWidth: 128,
         frameHeight: 128,
     },
     jump: {
-        path: "./assets/images/Wizard/Jump.png",
+        path: "./assets/images/SpriteSheets/Wizard/Jump.png",
         frameWidth: 128,
         frameHeight: 128,
     },
     fall: {
-        path: "./assets/images/Wizard/Walk.png",
+        path: "./assets/images/SpriteSheets/Wizard/Walk.png",
         frameWidth: 128,
         frameHeight: 128,
     }
