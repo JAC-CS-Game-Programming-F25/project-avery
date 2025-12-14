@@ -1,441 +1,439 @@
-import Sprite from '../../lib/Sprite.js';
-import ImageName from '../enums/ImageName.js';
-import Tile from './Tile.js';
-import Layer from './Layer.js';
-import { debugOptions, images } from '../globals.js';
-import GameObjectFactory from './GameObjectFactory.js';
-import { loadObjectSprites, objectSpriteConfig } from '../../config/SpriteConfig.js';
-import Vector from '../../lib/Vector.js';
+import Sprite from "../../lib/Sprite.js";
+import ImageName from "../enums/ImageName.js";
+import Tile from "./Tile.js";
+import Layer from "./Layer.js";
+import { debugOptions, images } from "../globals.js";
+import GameObjectFactory from "./GameObjectFactory.js";
+import {
+  loadObjectSprites,
+  objectSpriteConfig,
+} from "../../config/SpriteConfig.js";
+import Vector from "../../lib/Vector.js";
 export default class Map {
-	static BACKGROUND_LAYER = 0;
-    static COLLISION_LAYER = 1;
-    static FOREGROUND_LAYER = 2;
+  static BACKGROUND_LAYER = 0;
+  static COLLISION_LAYER = 1;
+  static FOREGROUND_LAYER = 2;
 
-	constructor(mapDefinition) {
-		
-		this.width = mapDefinition.width;
-		this.height = mapDefinition.height;
-		this.tileSize = mapDefinition.tilewidth;
+  constructor(mapDefinition) {
+    this.width = mapDefinition.width;
+    this.height = mapDefinition.height;
+    this.tileSize = mapDefinition.tilewidth;
 
-		const sprites = Sprite.generateSpritesFromSpriteSheet(
-			images.get(ImageName.Tiles),
-			this.tileSize,
-			this.tileSize
-		);
+    const sprites = Sprite.generateSpritesFromSpriteSheet(
+      images.get(ImageName.Tiles),
+      this.tileSize,
+      this.tileSize
+    );
 
-		this.tileLayers = [];
-        this.collisionLayer = null;
-		this.triggers = [];
-		this.objectLayer = null;
-		this.tempZones = [];
-		for (const layer of mapDefinition.layers) {
-			if (layer.type === 'tilelayer') {
-                const tileLayer = new Layer(layer, sprites);
+    this.tileLayers = [];
+    this.collisionLayer = null;
+    this.triggers = [];
+    this.objectLayer = null;
+    this.tempZones = [];
+    for (const layer of mapDefinition.layers) {
+      if (layer.type === "tilelayer") {
+        const tileLayer = new Layer(layer, sprites);
 
-                if (layer.name === 'Collision') {
-                    this.collisionLayer = tileLayer;
-                } else {
-                    this.tileLayers.push(tileLayer); // visual / foreground only
-                }
-            }
+        if (layer.name === "Collision") {
+          this.collisionLayer = tileLayer;
+        } else {
+          this.tileLayers.push(tileLayer); // visual / foreground only
+        }
+      }
 
+      if (layer.type === "objectgroup" && layer.name === "Objects") {
+        this.objectLayer = layer;
+      }
+      if (layer.type === "objectgroup" && layer.name === "TempZones") {
+        this.tempZones = layer.objects;
+      }
+      if (layer.type === "objectgroup" && layer.name === "Triggers") {
+        this.triggers = layer.objects;
+      }
+    }
 
-			if (layer.type === 'objectgroup' && layer.name === 'Objects') {
-				this.objectLayer = layer;
-			}
-			if (layer.type === 'objectgroup' && layer.name === 'TempZones') {
-				this.tempZones = layer.objects;
-			}
-			if (layer.type === 'objectgroup' && layer.name === 'Triggers') {
-				this.triggers = layer.objects;
-			}
-		}
+    this.objectSprites = {
+      Crate: loadObjectSprites(
+        images.get(ImageName.Tiles),
+        objectSpriteConfig.Crate
+      ),
+      Barrel: loadObjectSprites(
+        images.get(ImageName.Tiles),
+        objectSpriteConfig.Barrel
+      ),
+    };
+    this.gameObjects = [];
 
-		this.objectSprites = {
-			Crate: loadObjectSprites(
-				images.get(ImageName.Tiles),     
-				objectSpriteConfig.Crate        
-			),
-			Barrel: 
-			loadObjectSprites(
-				images.get(ImageName.Tiles),     
-				objectSpriteConfig.Barrel        
-			),
-		};
-		this.gameObjects = [];
-	
-		this.loadObjects();
-	}
+    this.loadObjects();
+  }
 
-	applyAmbientTemp(obj, dt) {
-		const AMBIENT = 20;
-		const RATE = 3;
+  applyAmbientTemp(obj, dt) {
+    const AMBIENT = 20;
+    const RATE = 3;
 
-		obj.temp += (AMBIENT - obj.temp) * RATE * dt * 0.01;
-	}	
-	applyTemperatureZones(dt) {
-		for (const obj of this.gameObjects) {
-			for (const zone of this.tempZones) {
-				if (!this.objectInsideZone(obj, zone)) continue;
+    obj.temp += (AMBIENT - obj.temp) * RATE * dt * 0.01;
+  }
+  applyTemperatureZones(dt) {
+    for (const obj of this.gameObjects) {
+      for (const zone of this.tempZones) {
+        if (!this.objectInsideZone(obj, zone)) continue;
 
-				const props = this.parseProperties(zone.properties);
-				const deltaPerSecond = Number(props.TempDelta ?? 0);
+        const props = this.parseProperties(zone.properties);
+        const deltaPerSecond = Number(props.TempDelta ?? 0);
 
-				if (deltaPerSecond === 0) continue;
+        if (deltaPerSecond === 0) continue;
 
-				const appliedDelta = deltaPerSecond * dt;
+        const appliedDelta = deltaPerSecond * dt;
 
-				// Apply to object inside zone
-				obj.temp += appliedDelta;
+        // Apply to object inside zone
+        obj.temp += appliedDelta;
 
-				// Sympathy transfer
-				if (obj.link) {
-					obj.link.transferHeat(obj, appliedDelta);
-				}
-			}
-		}
-	}
-
-
-	objectInsideZone(obj, zone) {
-		return (
-			obj.position.x < zone.x + zone.width &&
-			obj.position.x + obj.width > zone.x &&
-			obj.position.y < zone.y + zone.height &&
-			obj.position.y + obj.height > zone.y
-		);
-	}
-
-	loadObjects() {
-  if (!this.objectLayer) return;
-
-  for (const obj of this.objectLayer.objects) {
-    const sprites = this.objectSprites[obj.type];
-    if (!sprites) continue;
-
-    const properties = this.parseProperties(obj.properties);
-
-    const gameObject = GameObjectFactory.create({
-      objDef: obj,
-      map: this,
-      sprites,
-      properties,
-    });
-
-    if (gameObject) {
-      this.gameObjects.push(gameObject);
+        // Sympathy transfer
+        if (obj.link) {
+          obj.link.transferHeat(obj, appliedDelta);
+        }
+      }
     }
   }
-}
 
-	isOutOfBounds(obj) {
-		const worldBottom = this.height * this.tileSize;
-		return obj.position.y > worldBottom + 200;
-	}
+  objectInsideZone(obj, zone) {
+    return (
+      obj.position.x < zone.x + zone.width &&
+      obj.position.x + obj.width > zone.x &&
+      obj.position.y < zone.y + zone.height &&
+      obj.position.y + obj.height > zone.y
+    );
+  }
 
-	parseProperties(properties = []) {
-		const result = {};
-		for (const prop of properties) {
-			result[prop.name] = prop.value;
-		}
-		return result;
-	}
+  loadObjects() {
+    if (!this.objectLayer) return;
 
-	addGameObject(obj) {
-		this.gameObjects.push(obj);
-	}
-	update(dt) {
-		for (const obj of this.gameObjects) {
-			
-			if (!obj.isStatic) {
-				obj.applyForce({ x: 0, y: 980 * obj.mass }); 
-			}
+    for (const obj of this.objectLayer.objects) {
+      const sprites = this.objectSprites[obj.type];
+      if (!sprites) continue;
 
-			obj.update(dt);
-			obj.collisionDetector.checkHorizontalCollisions(obj);
-			obj.collisionDetector.checkVerticalCollisions(obj);
+      const properties = this.parseProperties(obj.properties);
 
-			if (this.isOutOfBounds(obj)) {
-				obj.resetToSpawn();
-			}
-		}
-		this.resolveObjectObjectCollisions();
-		this.resolveObjectObjectSideCollisions();
-		
-		this.applyTemperatureZones(dt);
-        this.removeBrokenObjects();
+      const gameObject = GameObjectFactory.create({
+        objDef: obj,
+        map: this,
+        sprites,
+        properties,
+      });
 
+      if (gameObject) {
+        this.gameObjects.push(gameObject);
+      }
+    }
+  }
 
-	}
+  isOutOfBounds(obj) {
+    const worldBottom = this.height * this.tileSize;
+    return obj.position.y > worldBottom + 200;
+  }
 
-	renderTempZones(ctx) {
-		if (!this.tempZones) return;
+  parseProperties(properties = []) {
+    const result = {};
+    for (const prop of properties) {
+      result[prop.name] = prop.value;
+    }
+    return result;
+  }
 
-		for (const zone of this.tempZones) {
-			const props = this.parseProperties(zone.properties);
-			const delta = Number(props.TempDelta ?? 0);
+  addGameObject(obj) {
+    this.gameObjects.push(obj);
+  }
+  update(dt) {
+    for (const obj of this.gameObjects) {
+      obj.isSupportingWeight = false;
+      if (!obj.isStatic) {
+        if (obj.isSupportingWeight) {
+          // Absolute vertical lock
+          obj.velocity.y = 0;
+          obj.forces.y = 0;
+        } else if (obj.isSympathyCapable && obj.isVerticallyLocked?.()) {
+          // Sympathy lock
+          obj.applyForce({ x: 0, y: 0 });
+        } else {
+          obj.applyForce({ x: 0, y: 980 * obj.mass });
+        }
+      }
 
-			if (delta === 0) continue;
+      obj.update(dt);
+      obj.collisionDetector.checkHorizontalCollisions(obj);
+      obj.collisionDetector.checkVerticalCollisions(obj);
 
-			ctx.save();
+      if (this.isOutOfBounds(obj)) {
+        obj.resetToSpawn();
+      }
+    }
+    this.resolveObjectObjectCollisions();
+    this.resolveObjectObjectSideCollisions();
 
-			// Heat vs cold
-			ctx.fillStyle =
-				delta > 0
-					? 'rgba(255, 120, 40, 0.25)'   // heat zone
-					: 'rgba(80, 150, 255, 0.25)'; // cold zone
+    this.applyTemperatureZones(dt);
+    this.removeBrokenObjects();
+  }
 
-			ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
+  renderTempZones(ctx) {
+    if (!this.tempZones) return;
 
-			// Subtle animated shimmer
-			ctx.strokeStyle =
-				delta > 0
-					? 'rgba(255, 180, 80, 0.6)'
-					: 'rgba(120, 180, 255, 0.6)';
+    for (const zone of this.tempZones) {
+      const props = this.parseProperties(zone.properties);
+      const delta = Number(props.TempDelta ?? 0);
 
-			ctx.lineWidth = 1;
-			ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
+      if (delta === 0) continue;
 
-			ctx.restore();
-		}
-	}
+      ctx.save();
 
-	resolveGameObjectCollisions(player) {
-		const pushStrength = 10000; 
+      // Heat vs cold
+      ctx.fillStyle =
+        delta > 0
+          ? "rgba(255, 120, 40, 0.25)" // heat zone
+          : "rgba(80, 150, 255, 0.25)"; // cold zone
 
-		for (const obj of this.gameObjects) {
-			if (!obj.isCollidable) continue;
-			if (!player.collidesWith(obj)) continue;
+      ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
 
-			const dir = player.getCollisionDirection(obj);
+      // Subtle animated shimmer
+      ctx.strokeStyle =
+        delta > 0 ? "rgba(255, 180, 80, 0.6)" : "rgba(120, 180, 255, 0.6)";
 
-			switch (dir) {
-				case 1: { 
-					const penetration =
-						player.hitboxBottom - obj.hitboxY;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
 
-					player.position.y -= penetration;
-					player.velocity.y = 0;
-					player.isOnGround = true;
+      ctx.restore();
+    }
+  }
 
-					obj.applyForce({
-						x: 0,
-						y: player.mass ? player.mass * 200 : 200
-					});
-					if (player.velocity.y >= 0) {
-						player.isOnGround = true;
-					}
-					break;
-				}
+  resolveGameObjectCollisions(player) {
+    const pushStrength = 10000;
 
-				case 2: { // player hit object from right
-					const penetration =
-						obj.hitboxRight - player.hitboxX;
+    for (const obj of this.gameObjects) {
+      if (!obj.isCollidable) continue;
+      if (!player.collidesWith(obj)) continue;
 
-					// Separate player
-					player.position.x += penetration;
-					player.velocity.x = 0;
+      const dir = player.getCollisionDirection(obj);
 
-					if (!obj.isStatic) {
-						obj.applyForce(new Vector(-pushStrength, 0));
+      switch (dir) {
+        case 1: {
+          const penetration = player.hitboxBottom - obj.hitboxY;
 
-					}
-					break;
-				}
+          player.position.y -= penetration;
+          player.velocity.y = 0;
+          player.isOnGround = true;
 
-				case 3: { // player hit object from left
-					const penetration =
-						player.hitboxRight - obj.hitboxX;
+          obj.applyForce({
+            x: 0,
+            y: player.mass ? player.mass * 200 : 200,
+          });
+          if (player.velocity.y >= 0) {
+            player.isOnGround = true;
+          }
+          break;
+        }
 
-					player.position.x -= penetration;
-					player.velocity.x = 0;
+        case 2: {
+          // player hit object from right
+          const penetration = obj.hitboxRight - player.hitboxX;
 
-					if (!obj.isStatic) {
-						obj.applyForce(new Vector(pushStrength, 0));
+          // Separate player
+          player.position.x += penetration;
+          player.velocity.x = 0;
 
-					}
-					break;
-				}
-			}
-		}
-	}
+          if (!obj.isStatic) {
+            obj.applyForce(new Vector(-pushStrength, 0));
+          }
+          break;
+        }
 
-	resolveTileCollisions(entity) {
-		const tileSize = this.tileSize;
+        case 3: {
+          // player hit object from left
+          const penetration = player.hitboxRight - obj.hitboxX;
 
-		// entity.isOnGround = false;
+          player.position.x -= penetration;
+          player.velocity.x = 0;
 
-		const bottom = entity.hitboxBottom;
-		const left = entity.hitboxX;
-		const right = entity.hitboxRight;
+          if (!obj.isStatic) {
+            obj.applyForce(new Vector(pushStrength, 0));
+          }
+          break;
+        }
+      }
+    }
+  }
 
-		const startCol = Math.floor(left / tileSize);
-		const endCol = Math.floor((right - 1) / tileSize);
-		const row = Math.floor(bottom / tileSize);
+  resolveTileCollisions(entity) {
+    const tileSize = this.tileSize;
 
-		for (let col = startCol; col <= endCol; col++) {
-			if (this.isSolidTileAt(col, row)) {
-				entity.position.y =
-					row * tileSize - entity.hitboxHeight - entity.hitboxOffset.y;
+    // entity.isOnGround = false;
 
-				entity.velocity.y = 0;
-				entity.isOnGround = true;
-				break;
-			}
-		}
-	}
+    const bottom = entity.hitboxBottom;
+    const left = entity.hitboxX;
+    const right = entity.hitboxRight;
 
+    const startCol = Math.floor(left / tileSize);
+    const endCol = Math.floor((right - 1) / tileSize);
+    const row = Math.floor(bottom / tileSize);
 
-	/**
-	 * FIXED — now passes `context` to layer
-	 */
-	render(context) {
-		for (const layer of this.tileLayers) {
-			layer.render(context);
-		}
+    for (let col = startCol; col <= endCol; col++) {
+      if (this.isSolidTileAt(col, row)) {
+        entity.position.y =
+          row * tileSize - entity.hitboxHeight - entity.hitboxOffset.y;
 
-		this.renderTempZones(context);
+        entity.velocity.y = 0;
+        entity.isOnGround = true;
+        break;
+      }
+    }
+  }
 
-		for (const obj of this.gameObjects) {
-			obj.render(context);
-		}
-	}
-    isSolidTileAt(col, row) {
-        if (!this.collisionLayer) return false;
-
-        const tile = this.collisionLayer.getTile(col, row);
-        return tile !== null;
+  /**
+   * FIXED — now passes `context` to layer
+   */
+  render(context) {
+    for (const layer of this.tileLayers) {
+      layer.render(context);
     }
 
-	renderGrid(context) {
-		context.save();
-		context.strokeStyle = 'rgba(255,255,255,0.2)';
-		context.lineWidth = 0.5;
+    this.renderTempZones(context);
 
-		for (let x = 0; x <= this.width; x++) {
-			context.beginPath();
-			context.moveTo(x * this.tileSize, 0);
-			context.lineTo(x * this.tileSize, this.height * this.tileSize);
-			context.stroke();
-		}
+    for (const obj of this.gameObjects) {
+      obj.render(context);
+    }
+  }
+  isSolidTileAt(col, row) {
+    if (!this.collisionLayer) return false;
 
-		for (let y = 0; y <= this.height; y++) {
-			context.beginPath();
-			context.moveTo(0, y * this.tileSize);
-			context.lineTo(this.width * this.tileSize, y * this.tileSize);
-			context.stroke();
-		}
+    const tile = this.collisionLayer.getTile(col, row);
+    return tile !== null;
+  }
 
-		context.restore();
-	}
+  renderGrid(context) {
+    context.save();
+    context.strokeStyle = "rgba(255,255,255,0.2)";
+    context.lineWidth = 0.5;
 
-	resolveObjectObjectCollisions() {
-		for (let i = 0; i < this.gameObjects.length; i++) {
-			const a = this.gameObjects[i];
-			if (a.isStatic) continue;
-
-			for (let j = 0; j < this.gameObjects.length; j++) {
-				if (i === j) continue;
-
-				const b = this.gameObjects[j];
-
-				// Only resolve if A is falling onto B
-				if (a.velocity.y <= 0) continue;
-
-				if (!a.collidesWith(b)) continue;
-
-				// Check that A is above B
-				const penetration = a.hitboxBottom - b.hitboxY;
-				if (penetration <= 0) continue;
-
-				// Snap A onto B
-				a.position.y -= penetration;
-				a.velocity.y = 0;
-				a.isOnGround = true;
-			}
-		}
-	}
-
-    resolveObjectObjectSideCollisions() {
-		for (let i = 0; i < this.gameObjects.length; i++) {
-			const a = this.gameObjects[i];
-			if (a.isStatic) continue;
-			if (Math.abs(a.velocity.x) < 0.01) continue;
-			for (let j = 0; j < this.gameObjects.length; j++) {
-				if (i === j) continue;
-
-				const b = this.gameObjects[j];
-				if (!a.collidesWith(b)) continue;
-
-				// Vertical overlap check
-				const verticalOverlap =
-					a.hitboxBottom > b.hitboxY &&
-					a.hitboxY < b.hitboxBottom;
-
-				if (!verticalOverlap) continue;
-
-				const overlapLeft = a.hitboxRight - b.hitboxX;
-				const overlapRight = b.hitboxRight - a.hitboxX;
-
-				let pushDir = 0;
-				let penetration = 0;
-
-				if (overlapLeft < overlapRight) {
-					pushDir = -1;
-					penetration = overlapLeft;
-				} else {
-					pushDir = 1;
-					penetration = overlapRight;
-				}
-
-				// Snap A out of B
-				a.position.x -= penetration * pushDir;
-
-				// --- NEW LOGIC ---
-				if (!b.isStatic) {
-					// Transfer motion instead of stopping
-					const transfer = a.velocity.x;
-
-					b.velocity.x += transfer * 0.9; // loss factor
-					a.velocity.x *= 0.1;            // resistance
-				} else {
-					// Solid object: stop A
-					a.velocity.x = 0;
-				}
-			}
-		}
-	}
-
-    destroy() {
-        // Clear dynamic objects
-        this.gameObjects.length = 0;
-
-        // Clear zones & layers
-        this.tempZones.length = 0;
-        this.tileLayers.length = 0;
-
-        // Remove references
-        this.objectLayer = null;
-		this.collisionLayer = null;
-
-        // Defensive: prevent accidental reuse
-        this.width = 0;
-        this.height = 0;
+    for (let x = 0; x <= this.width; x++) {
+      context.beginPath();
+      context.moveTo(x * this.tileSize, 0);
+      context.lineTo(x * this.tileSize, this.height * this.tileSize);
+      context.stroke();
     }
 
-    removeBrokenObjects() {
-        this.gameObjects = this.gameObjects.filter(obj => {
-            if (!obj.isBroken) return true;
-
-            // Clean sympathy link if present
-            if (obj.link) {
-                obj.link.destroy?.();
-                obj.link = null;
-            }
-
-            return false;
-        });
+    for (let y = 0; y <= this.height; y++) {
+      context.beginPath();
+      context.moveTo(0, y * this.tileSize);
+      context.lineTo(this.width * this.tileSize, y * this.tileSize);
+      context.stroke();
     }
 
+    context.restore();
+  }
 
+  resolveObjectObjectCollisions() {
+    for (let i = 0; i < this.gameObjects.length; i++) {
+      const a = this.gameObjects[i];
+      if (a.isStatic) continue;
+
+      for (let j = 0; j < this.gameObjects.length; j++) {
+        if (i === j) continue;
+
+        const b = this.gameObjects[j];
+
+        // Only resolve if A is falling onto B
+        if (a.velocity.y <= 0) continue;
+
+        if (!a.collidesWith(b)) continue;
+
+        // Check that A is above B
+        const penetration = a.hitboxBottom - b.hitboxY;
+        if (penetration <= 0) continue;
+
+        // Snap A onto B
+        a.position.y -= penetration;
+        a.velocity.y = 0;
+        a.isOnGround = true;
+      }
+    }
+  }
+
+  resolveObjectObjectSideCollisions() {
+    for (let i = 0; i < this.gameObjects.length; i++) {
+      const a = this.gameObjects[i];
+      if (a.isStatic) continue;
+      if (Math.abs(a.velocity.x) < 0.01) continue;
+      for (let j = 0; j < this.gameObjects.length; j++) {
+        if (i === j) continue;
+
+        const b = this.gameObjects[j];
+        if (!a.collidesWith(b)) continue;
+
+        // Vertical overlap check
+        const verticalOverlap =
+          a.hitboxBottom > b.hitboxY && a.hitboxY < b.hitboxBottom;
+
+        if (!verticalOverlap) continue;
+
+        const overlapLeft = a.hitboxRight - b.hitboxX;
+        const overlapRight = b.hitboxRight - a.hitboxX;
+
+        let pushDir = 0;
+        let penetration = 0;
+
+        if (overlapLeft < overlapRight) {
+          pushDir = -1;
+          penetration = overlapLeft;
+        } else {
+          pushDir = 1;
+          penetration = overlapRight;
+        }
+
+        // Snap A out of B
+        a.position.x -= penetration * pushDir;
+
+        b.isSupportingWeight = true;
+        // --- NEW LOGIC ---
+        if (!b.isStatic) {
+          // Transfer motion instead of stopping
+          const transfer = a.velocity.x;
+
+          b.velocity.x += transfer * 0.9; // loss factor
+          a.velocity.x *= 0.1; // resistance
+        } else {
+          // Solid object: stop A
+          a.velocity.x = 0;
+        }
+      }
+    }
+  }
+
+  destroy() {
+    // Clear dynamic objects
+    this.gameObjects.length = 0;
+
+    // Clear zones & layers
+    this.tempZones.length = 0;
+    this.tileLayers.length = 0;
+
+    // Remove references
+    this.objectLayer = null;
+    this.collisionLayer = null;
+
+    // Defensive: prevent accidental reuse
+    this.width = 0;
+    this.height = 0;
+  }
+
+  removeBrokenObjects() {
+    this.gameObjects = this.gameObjects.filter((obj) => {
+      if (!obj.isBroken) return true;
+
+      // Clean sympathy link if present
+      if (obj.link) {
+        obj.link.destroy?.();
+        obj.link = null;
+      }
+
+      return false;
+    });
+  }
 }

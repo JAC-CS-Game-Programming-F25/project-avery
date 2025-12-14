@@ -7,6 +7,7 @@ export default class SympathyObject extends GameObject {
     this.isSympathyCapable = true;
     this.sympathyLinkedItem = null;
     this.link = null;
+    this.isSupportingWeight = false;
   }
 
   breakObject() {
@@ -21,8 +22,9 @@ export default class SympathyObject extends GameObject {
     return true;
   }
     canMoveInDirection(force) {
+        console.log(`${this.sympathyLinkedItem !== null }&& ${this.sympathyLinkedItem.wasOnGround} && ${this.wasOnGround}`)
         if (
-            force.y > 0 &&
+            // force.y > 0 &&
             (
                 this.wasOnGround ||
                 (this.sympathyLinkedItem && this.sympathyLinkedItem.wasOnGround)
@@ -30,6 +32,7 @@ export default class SympathyObject extends GameObject {
         ) {
             return { x: force.x, y: 0 };
         }
+            console.log("HIT")
 
         return force;
     }
@@ -43,6 +46,7 @@ export default class SympathyObject extends GameObject {
     }
 
     applySympathyForce(force){
+        console.log(this.canMoveInDirection(force))
         const clamped = this.canMoveInDirection(force);
         this.forces.x += clamped.x;
         this.forces.y += clamped.y;

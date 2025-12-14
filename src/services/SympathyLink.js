@@ -35,10 +35,7 @@ export default class SympathyLink {
     if (!this.active) return;
 
     // Drain player concentration
-    console.log(`dt ${dt}`)
-    console.log(`Method:  ${this.getConcentrationDrainRate()}`)
     const drain = this.getConcentrationDrainRate() * dt;
-    console.log("drain",drain)
     player.consumeConcentration(drain),drain;
 
     if (!player.canUseSympathy()) {

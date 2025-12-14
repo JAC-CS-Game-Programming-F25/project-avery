@@ -15,7 +15,6 @@ export default class LevelTransitionState extends State {
      * Called when entering the transition state
      */
     enter(params) {
-        console.log('[Transition] enter', params);
 
         this.targetLevelIndex = params.levelIndex;
         this.timer = 0;
@@ -25,7 +24,6 @@ export default class LevelTransitionState extends State {
     }
 
     update(dt) {
-        console.log('[Transition] updating', this.timer);
         this.timer += dt;
 
         // Perform the level swap ONCE
