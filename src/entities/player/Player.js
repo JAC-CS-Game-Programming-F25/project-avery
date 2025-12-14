@@ -113,7 +113,8 @@ export default class Player extends Entity {
     }
 
     canUseSympathy(){
-        return this.currentConcentration > 0;
+        return true;
+        // return this.currentConcentration > 0;
     }
 
     consumeConcentration(amount){

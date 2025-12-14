@@ -3,7 +3,7 @@ import ImageName from '../enums/ImageName.js';
 import Tile from './Tile.js';
 import Layer from './Layer.js';
 import { debugOptions, images } from '../globals.js';
-import GameObject from '../entities/object/GameObject.js'
+import GameObjectFactory from './GameObjectFactory.js';
 import { loadObjectSprites, objectSpriteConfig } from '../../config/SpriteConfig.js';
 import Vector from '../../lib/Vector.js';
 export default class Map {
@@ -107,33 +107,27 @@ export default class Map {
 	}
 
 	loadObjects() {
-		if (!this.objectLayer) return;
+  if (!this.objectLayer) return;
 
-		for (const obj of this.objectLayer.objects) {
-			const sprites = this.objectSprites[obj.type];
+  for (const obj of this.objectLayer.objects) {
+    const sprites = this.objectSprites[obj.type];
+    if (!sprites) continue;
 
-			if (!sprites) {
-				// alert(`No sprites for object type: ${obj.type}`);
-				continue;
-			}
- 			const props = this.parseProperties(obj.properties);
-			
-			const gameObject = new GameObject({
-				x: obj.x,
-				y: obj.y - obj.height, 
-				map: this,
-				width: obj.width,
-				height: obj.height,
-				type: obj.type,
-				mass: Number(props.Weight),      
-				temp: 20,     
-				sprites: sprites,}
-				
-			);
+    const properties = this.parseProperties(obj.properties);
 
-			this.gameObjects.push(gameObject);
-		}
-	}
+    const gameObject = GameObjectFactory.create({
+      objDef: obj,
+      map: this,
+      sprites,
+      properties,
+    });
+
+    if (gameObject) {
+      this.gameObjects.push(gameObject);
+    }
+  }
+}
+
 	isOutOfBounds(obj) {
 		const worldBottom = this.height * this.tileSize;
 		return obj.position.y > worldBottom + 200;

@@ -118,12 +118,15 @@ export default class PlayState extends State {
     this.debug.update();
 
     if (input.isKeyPressed(Input.KEYS.ESCAPE)) {
-      if (this.sympathyManager.active || this.sympathyManager.hasActiveLink()) {
+      if (this.sympathyManager.hasActiveLink()) {
         this.sympathyManager.breakLink();
+      } else if (this.sympathyManager.active) {
+        this.sympathyManager.exit();
       } else {
         this.stateMachine.change(GameStateName.Pause, { playState: this });
       }
     }
+
     if (sounds.sounds.intro.isEnded() && !this.mainMusicStarted) {
       this.mainMusicStarted = true;
       sounds.play(MusicName.Main);
@@ -142,9 +145,10 @@ export default class PlayState extends State {
       return;
     }
 
-    // 🔴 SYMPATHY HAS PRIORITY 🔴
+    this.sympathyManager.update(dt);
+
+    // If in sympathy mode, freeze the world
     if (this.sympathyManager.active) {
-      this.sympathyManager.update(dt);
       return;
     }
 
@@ -156,7 +160,6 @@ export default class PlayState extends State {
     this.player.update(dt);
 
     this.map.resolveGameObjectCollisions(this.player);
-    this.sympathyManager.update(dt);
 
     this.checkGoalTrigger();
     this.checkDeathFall();
@@ -193,7 +196,21 @@ export default class PlayState extends State {
     this.map.render(context);
     this.player.render(context);
     this.sympathyManager.render(context);
+    if (this.sympathyManager.active) {
+      // Dim screen (camera space)
+      context.save();
+      context.fillStyle = "rgba(0, 0, 0, 0.45)";
+      context.fillRect(
+        this.camera.position.x,
+        this.camera.position.y,
+        canvas.width,
+        canvas.height
+      );
+      context.restore();
 
+      // Draw sympathy highlights
+      this.renderSympathySelection(context);
+    }
     this.camera.resetTransform(context);
 
     // 🧠 4. UI (screen space)

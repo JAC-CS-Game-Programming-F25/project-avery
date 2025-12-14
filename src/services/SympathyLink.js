@@ -4,175 +4,153 @@ import { timer } from "../globals.js";
 import Easing from "../../lib/Easing.js";
 
 export default class SympathyLink {
-    static BASE_DRAIN = 5;
-    static LOWER_SIM_CLAMP = 0.2;
-    static UPPER_SIM_CLAMP = 0.95;
+  static BASE_DRAIN = 5;
+  static LOWER_SIM_CLAMP = 0.2;
+  static UPPER_SIM_CLAMP = 0.95;
 
-    constructor(objectA, objectB) {
-        this.objectA = objectA;
-        this.objectB = objectB;
+  constructor(objectA, objectB) {
+    this.objectA = objectA;
+    this.objectB = objectB;
 
-        this.active = true;
+    this.active = true;
 
-        // Calculate similarity once at creation
-        this.similarity = this._calculateSimilarity();
+    // Calculate similarity once at creation
+    this.similarity = this._calculateSimilarity();
 
-        // Visual-only state (safe for tweening)
-        this.visual = {
-            strength: 0,   // fades in/out
-            pulse: 0       // micro animation
-        };
+    // Visual-only state (safe for tweening)
+    this.visual = {
+      strength: 0, // fades in/out
+      pulse: 0, // micro animation
+    };
 
-        // Animate link appearing
-        timer.tween(
-            this.visual,
-            { strength: 1 },
-            0.25,
-            Easing.outCubic
-        );
+    // Animate link appearing
+    timer.tween(this.visual, { strength: 1 }, 0.25, Easing.outCubic);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  LOGIC                                                             */
+  /* ------------------------------------------------------------------ */
+
+  update(player, dt) {
+    if (!this.active) return;
+
+    // Drain player concentration
+    const drain = this.getConcentrationDrainRate() * dt;
+    player.consumeConcentration(drain);
+
+    if (!player.canUseSympathy()) {
+      this.break();
     }
+  }
 
-    /* ------------------------------------------------------------------ */
-    /*  LOGIC                                                             */
-    /* ------------------------------------------------------------------ */
+  break() {
+    if (!this.active) return;
 
-    update(player, dt) {
-        if (!this.active) return;
+    this.active = false;
 
-        // Drain player concentration
-        const drain = this.getConcentrationDrainRate() * dt;
-        player.consumeConcentration(drain);
+    // Animate link collapse
+    timer.tween(this.visual, { strength: 0 }, 0.15, Easing.inCubic);
+  }
 
-        if (!player.canUseSympathy()) {
-            this.break();
-        }
-    }
+  /* ------------------------------------------------------------------ */
+  /*  TRANSFERS                                                         */
+  /* ------------------------------------------------------------------ */
 
-    break() {
-        if (!this.active) return;
+  transferHeat(source, deltaTemp) {
+    if (!this.active) return;
 
-        this.active = false;
+    const target = source === this.objectA ? this.objectB : this.objectA;
 
-        // Animate link collapse
-        timer.tween(
-            this.visual,
-            { strength: 0 },
-            0.15,
-            Easing.inCubic
-        );
-    }
+    target.temp += deltaTemp * this.similarity;
+  }
 
-    /* ------------------------------------------------------------------ */
-    /*  TRANSFERS                                                         */
-    /* ------------------------------------------------------------------ */
+  transferForce(fromObj, force) {
+    if (!this.active) return;
 
-    transferHeat(source, deltaTemp) {
-        if (!this.active) return;
+    const toObj = fromObj === this.objectA ? this.objectB : this.objectA;
 
-        const target =
-            source === this.objectA
-                ? this.objectB
-                : this.objectA;
+    if (!toObj) return;
 
-        target.temp += deltaTemp * this.similarity;
-    }
+    const scaled = new Vector(
+      force.x * this.similarity,
+      force.y * this.similarity
+    );
 
-    transferForce(fromObj, force) {
-        if (!this.active) return;
+    toObj.applyForce(scaled, this);
+  }
 
-        const toObj =
-            fromObj === this.objectA
-                ? this.objectB
-                : this.objectA;
+  /* ------------------------------------------------------------------ */
+  /*  METRICS                                                           */
+  /* ------------------------------------------------------------------ */
 
-        if (!toObj) return;
+  getEfficiency() {
+    return this.similarity;
+  }
 
-        const scaled = new Vector(
-            force.x * this.similarity,
-            force.y * this.similarity
-        );
+  getConcentrationDrainRate() {
+    // Worse matches drain faster
+    return SympathyLink.BASE_DRAIN * (1 / this.similarity);
+  }
 
-        toObj.applyForce(scaled, this);
-    }
+  _calculateSimilarity() {
+    let score = 1;
 
-    /* ------------------------------------------------------------------ */
-    /*  METRICS                                                           */
-    /* ------------------------------------------------------------------ */
+    // Mass similarity
+    const massDiff = Math.abs(this.objectA.mass - this.objectB.mass);
+    score -= massDiff * 0.01;
 
-    getEfficiency() {
-        return this.similarity;
-    }
+    // Temperature similarity
+    const tempDiff = Math.abs(this.objectA.temp - this.objectB.temp);
+    score -= tempDiff * 0.005;
 
-    getConcentrationDrainRate() {
-        // Worse matches drain faster
-        return SympathyLink.BASE_DRAIN * (1 / this.similarity);
-    }
+    // Size similarity
+    const sizeDiff = Math.abs(
+      this.objectA.calculateSize() - this.objectB.calculateSize()
+    );
+    score -= sizeDiff * 0.0001;
 
-    _calculateSimilarity() {
-        let score = 1;
+    return Math.max(
+      SympathyLink.LOWER_SIM_CLAMP,
+      Math.min(score, SympathyLink.UPPER_SIM_CLAMP)
+    );
+  }
 
-        // Mass similarity
-        const massDiff = Math.abs(
-            this.objectA.mass - this.objectB.mass
-        );
-        score -= massDiff * 0.01;
+  /* ------------------------------------------------------------------ */
+  /*  RENDER                                                            */
+  /* ------------------------------------------------------------------ */
 
-        // Temperature similarity
-        const tempDiff = Math.abs(
-            this.objectA.temp - this.objectB.temp
-        );
-        score -= tempDiff * 0.005;
+  render(ctx) {
+    if (!this.active && this.visual.strength <= 0.01) return;
 
-        // Size similarity
-        const sizeDiff = Math.abs(
-            this.objectA.calculateSize() -
-            this.objectB.calculateSize()
-        );
-        score -= sizeDiff * 0.0001;
+    const a = this.objectA;
+    const b = this.objectB;
 
-        return Math.max(
-            SympathyLink.LOWER_SIM_CLAMP,
-            Math.min(score, SympathyLink.UPPER_SIM_CLAMP)
-        );
-    }
+    const ax = a.position.x + a.dimensions.x / 2;
+    const ay = a.position.y + a.dimensions.y / 2;
+    const bx = b.position.x + b.dimensions.x / 2;
+    const by = b.position.y + b.dimensions.y / 2;
 
-    /* ------------------------------------------------------------------ */
-    /*  RENDER                                                            */
-    /* ------------------------------------------------------------------ */
+    // Subtle pulse for juice
+    const pulse = 1 + Math.sin(performance.now() * 0.008) * 0.15;
 
-    render(ctx) {
-        if (!this.active && this.visual.strength <= 0.01) return;
+    ctx.save();
 
-        const a = this.objectA;
-        const b = this.objectB;
+    ctx.globalAlpha = this.visual.strength;
+    ctx.lineWidth = 2.5 * pulse * this.visual.strength;
 
-        const ax = a.position.x + a.dimensions.x / 2;
-        const ay = a.position.y + a.dimensions.y / 2;
-        const bx = b.position.x + b.dimensions.x / 2;
-        const by = b.position.y + b.dimensions.y / 2;
+    // Colour communicates link quality
+    ctx.strokeStyle =
+      this.similarity > 0.6
+        ? "rgba(120, 200, 255, 0.9)" // strong / cold
+        : this.similarity > 0.4
+        ? "rgba(255, 200, 100, 0.9)" // unstable
+        : "rgba(255, 100, 80, 0.9)"; // weak / stressed
 
-        // Subtle pulse for juice
-        const pulse =
-            1 + Math.sin(performance.now() * 0.008) * 0.15;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
 
-        ctx.save();
-
-        ctx.globalAlpha = this.visual.strength;
-        ctx.lineWidth = 2.5 * pulse * this.visual.strength;
-
-        // Colour communicates link quality
-        ctx.strokeStyle =
-            this.similarity > 0.6
-                ? "rgba(120, 200, 255, 0.9)"   // strong / cold
-                : this.similarity > 0.4
-                ? "rgba(255, 200, 100, 0.9)"   // unstable
-                : "rgba(255, 100, 80, 0.9)";   // weak / stressed
-
-        ctx.beginPath();
-        ctx.moveTo(ax, ay);
-        ctx.lineTo(bx, by);
-        ctx.stroke();
-
-        ctx.restore();
-    }
+    ctx.restore();
+  }
 }
