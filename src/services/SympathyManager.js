@@ -154,6 +154,19 @@ export default class SympathyManager{
         this.updateHighlight();
     }
 
+    reset() {
+        for (const link of this.links) {
+            link.destroy?.();
+        }
+
+        this.links.length = 0;
+        this.viableObjects.length = 0;
+
+        this.firstSelection = null;
+        this.selectionIndex = 0;
+        this.active = false;
+    }
+
     exit() {
         this.active = false;
         for (const obj of this.viableObjects) {

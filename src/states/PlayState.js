@@ -10,16 +10,24 @@ import MusicName from '../enums/MusicName.js';
 import SympathyPanel from '../user-interface/SympathyPanel.js';
 import SympathyManager from '../services/SympathyManager.js';
 import Input from '../../lib/Input.js';
+import GameStateName from '../enums/GameStateName.js'
 /**
  * Represents the main play state of the game.
  * @extends State
  */
 export default class PlayState extends State {
-    constructor(mapDefinition) {
+    constructor(loadedLevels) {
         super();
 
-        this.map = new Map(mapDefinition);
-        this.player = new Player(50, 150, this.map);
+        this.levels = loadedLevels;
+        this.levelOrder = Object.keys(loadedLevels);
+        this.currentLevelIndex = 0;
+
+        const first = this.levels[this.levelOrder[this.currentLevelIndex]];
+
+        this.map = new Map(first.definition);
+        this.player = new Player(first.spawn.x, first.spawn.y, this.map);
+
         this.camera = new Camera(
             this.player,
             canvas.width,
@@ -27,26 +35,38 @@ export default class PlayState extends State {
             this.map.width * Tile.SIZE,
             this.map.height * Tile.SIZE
         );
-
         this.debug = new Debug();
 
-        // Background image pulled from Images system
+        this.sympathyManager = new SympathyManager(this.player);
+        this.sympathyPanel = new SympathyPanel(this.player, this.sympathyManager);
         this.backgroundImage = images.get(ImageName.Background);
-        this.mainMusicStarted = false;
-        // Parallax background layers
         this.parallaxLayers = [
             { image: this.backgroundImage, speedX: 0.04, speedY: 0.1 },
         ];
 
-        this.sympathyManager = new SympathyManager(this.player);
-        this.sympathyPanel = new SympathyPanel(
-            this.player,
-            this.sympathyManager
-        );
-
-        sounds.play(MusicName.Intro);
     }
 
+    loadLevelByIndex(index) {
+        if (index < 0 || index >= this.levelOrder.length) return;
+
+        const level = this.levels[this.levelOrder[index]];
+        this.currentLevelIndex = index;
+
+        // Cleanup
+        this.sympathyManager.reset();
+        this.map.destroy();
+
+        // Load new
+        this.map = new Map(level.definition);
+
+        this.player.reset(level.spawn.x, level.spawn.y);
+        this.player.map = this.map;
+
+        this.camera.setBounds(
+            this.map.width * Tile.SIZE,
+            this.map.height * Tile.SIZE
+        );
+    }
     update(dt) {
         timer.update(dt);
         this.debug.update();
@@ -71,12 +91,27 @@ export default class PlayState extends State {
         this.sympathyManager.update(dt);
 
         if (input.isKeyPressed(Input.KEYS.ENTER)) {
-            this.stateMachine.change('link', {
-                returnState: 'play'
+            this.stateMachine.change(GameStateName.Link, {
+                returnState: GameStateName.Play
             });
         }
-    }
+        if (input.isKeyPressed(Input.KEYS.N)) {
+            console.log(
+                '[Level] Switching to next level:',
+                this.levelOrder[this.currentLevelIndex + 1]
+            );
+            this.loadLevelByIndex(this.currentLevelIndex + 1);
+        }
 
+        if (input.isKeyPressed(Input.KEYS.P)) {
+            console.log(
+                '[Level] Switching to previous level:',
+                this.levelOrder[this.currentLevelIndex - 1]
+            );
+            this.loadLevelByIndex(this.currentLevelIndex - 1);
+        }
+ 
+    }
 
     render(context) {
         this.camera.applyTransform(context);

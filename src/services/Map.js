@@ -24,12 +24,21 @@ export default class Map {
 		);
 
 		this.tileLayers = [];
+        this.collisionLayer = null;
+
 		this.objectLayer = null;
 		this.tempZones = [];
 		for (const layer of mapDefinition.layers) {
 			if (layer.type === 'tilelayer') {
-				this.tileLayers.push(new Layer(layer, sprites));
-			}
+                const tileLayer = new Layer(layer, sprites);
+
+                if (layer.name === 'Collision') {
+                    this.collisionLayer = tileLayer;
+                } else {
+                    this.tileLayers.push(tileLayer); // visual / foreground only
+                }
+            }
+
 
 			if (layer.type === 'objectgroup' && layer.name === 'Objects') {
 				this.objectLayer = layer;
@@ -101,7 +110,7 @@ export default class Map {
 			const sprites = this.objectSprites[obj.type];
 
 			if (!sprites) {
-				console.warn(`No sprites for object type: ${obj.type}`);
+				alert(`No sprites for object type: ${obj.type}`);
 				continue;
 			}
  			const props = this.parseProperties(obj.properties);
@@ -148,6 +157,8 @@ export default class Map {
 		this.resolveObjectObjectCollisions();
 		this.resolveObjectObjectSideCollisions();
 		this.applyTemperatureZones(dt);
+        this.removeBrokenObjects();
+
 
 	}
 
@@ -283,14 +294,13 @@ export default class Map {
 			obj.render(context);
 		}
 	}
+    isSolidTileAt(col, row) {
+        if (!this.collisionLayer) return false;
 
-	isSolidTileAt(col, row) {
-		const layer = this.tileLayers[Map.COLLISION_LAYER];
-		if (!layer) return false;
+        const tile = this.collisionLayer.getTile(col, row);
+        return tile !== null;
+    }
 
-		const tile = layer.getTile(col, row);
-		return tile !== null;
-	}
 	renderGrid(context) {
 		context.save();
 		context.strokeStyle = 'rgba(255,255,255,0.2)';
@@ -340,7 +350,7 @@ export default class Map {
 		}
 	}
 
-		resolveObjectObjectSideCollisions() {
+    resolveObjectObjectSideCollisions() {
 		for (let i = 0; i < this.gameObjects.length; i++) {
 			const a = this.gameObjects[i];
 			if (a.isStatic) continue;
@@ -390,6 +400,35 @@ export default class Map {
 		}
 	}
 
+    destroy() {
+        // Clear dynamic objects
+        this.gameObjects.length = 0;
+
+        // Clear zones & layers
+        this.tempZones.length = 0;
+        this.tileLayers.length = 0;
+
+        // Remove references
+        this.objectLayer = null;
+
+        // Defensive: prevent accidental reuse
+        this.width = 0;
+        this.height = 0;
+    }
+
+    removeBrokenObjects() {
+        this.gameObjects = this.gameObjects.filter(obj => {
+            if (!obj.isBroken) return true;
+
+            // Clean sympathy link if present
+            if (obj.link) {
+                obj.link.destroy?.();
+                obj.link = null;
+            }
+
+            return false;
+        });
+    }
 
 
 }

@@ -41,7 +41,23 @@ export default class Player extends Entity {
         this.stateMachine.add(PlayerStateName.Jumping, new PlayerJumpingState(this));
         this.stateMachine.add(PlayerStateName.Falling, new PlayerFallingState(this));
     }
-    
+    reset(x, y) {
+        // Reset position safely
+        this.position.set(x, y);
+
+        // Reset motion
+        this.velocity.set(0, 0);
+
+        this.isOnGround = false;
+
+        // Reset player-specific state
+        this.resetConcentration();
+        this.facingRight = true;
+
+        // Reset animation/state
+        this.stateMachine.change(PlayerStateName.Idling);
+    }
+
     async loadSprites() {
         this.sprites = await loadPlayerSprites(playerSpriteConfig);
 

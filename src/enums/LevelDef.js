@@ -1,12 +1,12 @@
 export const LEVELS = [
   {
-    id: "intro_push",
-    mapPath: "./assets/maps/intro_push.json",
+    id: "tutorial",
+    mapPath: "./config/levels/tutorial.json",
     spawn: { x: 64, y: 128 },
   },
   {
-    id: "temp_basics",
-    mapPath: "./assets/maps/temp_basics.json",
+    id: "main",
+    mapPath: "./config/levels/tilemap.json",
     spawn: { x: 32, y: 96 },
   },
 ];

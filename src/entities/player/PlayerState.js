@@ -78,4 +78,26 @@ export default class PlayerState extends State {
 
         if (Math.abs(this.player.velocity.x) < 0.01) this.player.velocity.x = 0;
     }
+    loadLevel(mapDefinition) {
+    // --- CLEANUP OLD LEVEL ---
+    this.sympathyManager.reset();
+
+    if (this.map) {
+        this.map.destroy();
+    }
+
+    // --- CREATE NEW LEVEL ---
+    this.map = new Map(mapDefinition);
+
+    // Respawn player (Tiled spawn support later)
+    this.player.reset(50, 150);
+    this.player.map = this.map;
+
+    // Update camera bounds
+    this.camera.setBounds(
+        this.map.width * Tile.SIZE,
+        this.map.height * Tile.SIZE
+    );
+}
+
 }

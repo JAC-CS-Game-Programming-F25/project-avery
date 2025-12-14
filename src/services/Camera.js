@@ -170,4 +170,9 @@ export default class Camera {
 			y: this.center.y + this.lookahead.y,
 		};
 	}
+
+	setBounds(worldWidth, worldHeight) {
+		this.worldWidth = worldWidth;
+		this.worldHeight = worldHeight;
+	}
 }

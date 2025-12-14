@@ -28,7 +28,16 @@ import {
 } from './globals.js';
 import PlayState from './states/PlayState.js';
 import LinkCreationState from './states/LinkCreationState.js';
+import { LEVELS } from './enums/LevelDef.js'
 
+const loadedLevels = {};
+
+for (const level of LEVELS) {
+    loadedLevels[level.id] = {
+        definition: await fetch(level.mapPath).then(r => r.json()),
+        spawn: level.spawn,
+    };
+}
 // Set the dimensions of the play area.
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
@@ -37,13 +46,8 @@ canvas.setAttribute('tabindex', '1'); // Allows the canvas to receive user input
 // Now that the canvas element has been prepared, we can add it to the DOM.
 document.body.prepend(canvas);
 
-const mapDefinition = await fetch('./config/tempzone.json').then((response) =>
-	response.json()
-);
-
 // Add all the states to the state machine.
-const playState = new PlayState(mapDefinition);
-
+const playState = new PlayState(loadedLevels);
 stateMachine.add(GameStateName.Play, playState);
 
 stateMachine.add(
