@@ -25,7 +25,7 @@ export default class Map {
 
 		this.tileLayers = [];
         this.collisionLayer = null;
-
+		this.triggers = [];
 		this.objectLayer = null;
 		this.tempZones = [];
 		for (const layer of mapDefinition.layers) {
@@ -45,6 +45,9 @@ export default class Map {
 			}
 			if (layer.type === 'objectgroup' && layer.name === 'TempZones') {
 				this.tempZones = layer.objects;
+			}
+			if (layer.type === 'objectgroup' && layer.name === 'Triggers') {
+				this.triggers = layer.objects;
 			}
 		}
 
@@ -110,7 +113,7 @@ export default class Map {
 			const sprites = this.objectSprites[obj.type];
 
 			if (!sprites) {
-				alert(`No sprites for object type: ${obj.type}`);
+				// alert(`No sprites for object type: ${obj.type}`);
 				continue;
 			}
  			const props = this.parseProperties(obj.properties);
@@ -131,7 +134,10 @@ export default class Map {
 			this.gameObjects.push(gameObject);
 		}
 	}
-
+	isOutOfBounds(obj) {
+		const worldBottom = this.height * this.tileSize;
+		return obj.position.y > worldBottom + 200;
+	}
 
 	parseProperties(properties = []) {
 		const result = {};
@@ -152,10 +158,16 @@ export default class Map {
 			}
 
 			obj.update(dt);
-			this.resolveTileCollisions(obj);
+			obj.collisionDetector.checkHorizontalCollisions(obj);
+			obj.collisionDetector.checkVerticalCollisions(obj);
+
+			if (this.isOutOfBounds(obj)) {
+				obj.resetToSpawn();
+			}
 		}
 		this.resolveObjectObjectCollisions();
 		this.resolveObjectObjectSideCollisions();
+		
 		this.applyTemperatureZones(dt);
         this.removeBrokenObjects();
 
@@ -410,6 +422,7 @@ export default class Map {
 
         // Remove references
         this.objectLayer = null;
+		this.collisionLayer = null;
 
         // Defensive: prevent accidental reuse
         this.width = 0;

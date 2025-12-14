@@ -3,6 +3,7 @@ import Vector from "../../../lib/Vector.js";
 import Sprite from "../../../lib/Sprite.js";
 import { images } from "../../globals.js";
 import ImageName from "../../enums/ImageName.js";
+import CollisionDetector from "../../services/CollisionDetector.js";
 
 export default class GameObject extends Entity{
     static SAFE_TEMP_MIN = -30;
@@ -36,6 +37,9 @@ export default class GameObject extends Entity{
         this.link = null;
         this.wasOnGround = false;
         this.isCollidable = true;
+        this.collisionDetector = new CollisionDetector(map);
+        this.spawnPosition = new Vector(x, y);
+
         console.log(this)
     }
 
@@ -320,5 +324,20 @@ export default class GameObject extends Entity{
         const stressPenalty = (this.stress + this.sympathyLinkedItem.stress) * 0.5;
 
         return 1 + (1 - this.link.similarity) + stressPenalty;
+    }
+
+    resetToSpawn() {
+        this.position.x = this.spawnPosition.x;
+        this.position.y = this.spawnPosition.y;
+
+        this.velocity.x = 0;
+        this.velocity.y = 0;
+
+        this.forces.x = 0;
+        this.forces.y = 0;
+
+        this.isOnGround = false;
+        this.temp = 20;
+        this.stress = 0;
     }
 }

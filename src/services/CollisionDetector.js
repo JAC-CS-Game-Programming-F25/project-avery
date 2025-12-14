@@ -7,9 +7,12 @@ import Map from './Map.js';
  */
 export default class CollisionDetector {
 	constructor(map) {
-		this.map = map;
+		this.setMap(map)
 	}
 
+	setMap(map) {
+    	this.map = map;
+	}
 	checkHorizontalCollisions(entity) {
 		const tileSize = this.map.tileSize;
 

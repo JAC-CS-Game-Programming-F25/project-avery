@@ -42,6 +42,34 @@
          "y":0
         }, 
         {
+         "draworder":"topdown",
+         "id":4,
+         "name":"Triggers",
+         "objects":[
+                {
+                 "height":31.8181818181818,
+                 "id":4,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"NextLevelOffset",
+                         "type":"string",
+                         "value":"1"
+                        }],
+                 "rotation":0,
+                 "type":"Goal",
+                 "visible":true,
+                 "width":64.1818181818182,
+                 "x":416,
+                 "y":112
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
          "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -81,6 +109,12 @@
                  "height":16,
                  "id":1,
                  "name":"",
+                 "properties":[
+                        {
+                         "name":"Weight",
+                         "type":"string",
+                         "value":"2"
+                        }],
                  "rotation":0,
                  "type":"Crate",
                  "visible":true,
@@ -92,12 +126,29 @@
                  "height":16,
                  "id":3,
                  "name":"",
+                 "properties":[
+                        {
+                         "name":"Weight",
+                         "type":"string",
+                         "value":"2"
+                        }],
                  "rotation":0,
                  "type":"Crate",
                  "visible":true,
                  "width":15.75,
                  "x":116.125,
                  "y":220
+                }, 
+                {
+                 "height":3.33333333333331,
+                 "id":5,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":2,
+                 "x":-114,
+                 "y":144
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -105,8 +156,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":4,
- "nextobjectid":4,
+ "nextlayerid":5,
+ "nextobjectid":6,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",
@@ -117,7 +168,7 @@
          "source":"tiles.tsx"
         }, 
         {
-         "firstgid":50,
+         "firstgid":44,
          "source":"Campire.tsx"
         }],
  "tilewidth":16,

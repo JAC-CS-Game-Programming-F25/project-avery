@@ -1,6 +1,8 @@
 export const CameraSettings = {
-	lookahead: 100,
-	damping: 300,
+    lookahead: 120,
+    damping: 8,
+
+    verticalBias: 48, 
 };
 
 export function updateCameraSettings() {

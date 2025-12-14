@@ -17,31 +17,34 @@
  * @see https://www.sounds-resource.com/snes/supermarioworld/
  */
 
-import GameStateName from './enums/GameStateName.js';
-import Game from '../lib/Game.js';
+import GameStateName from "./enums/GameStateName.js";
+import Game from "../lib/Game.js";
 import {
-	canvas,
-	CANVAS_HEIGHT,
-	CANVAS_WIDTH,
-	context,
-	stateMachine,
-} from './globals.js';
-import PlayState from './states/PlayState.js';
-import LinkCreationState from './states/LinkCreationState.js';
-import { LEVELS } from './enums/LevelDef.js'
+  canvas,
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  context,
+  stateMachine,
+} from "./globals.js";
+import PlayState from "./states/PlayState.js";
+import LinkCreationState from "./states/LinkCreationState.js";
+import LevelTransitionState from "./states/LevelTransitionState.js";
+import { LEVELS } from "./enums/LevelDef.js";
+import MainMenuState from "./states/MainMenuState.js";
+import PauseMenuState from "./states/PauseMenuState.js";
 
 const loadedLevels = {};
 
 for (const level of LEVELS) {
-    loadedLevels[level.id] = {
-        definition: await fetch(level.mapPath).then(r => r.json()),
-        spawn: level.spawn,
-    };
+  loadedLevels[level.id] = {
+    definition: await fetch(level.mapPath).then((r) => r.json()),
+    spawn: level.spawn,
+  };
 }
 // Set the dimensions of the play area.
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
-canvas.setAttribute('tabindex', '1'); // Allows the canvas to receive user input.
+canvas.setAttribute("tabindex", "1"); // Allows the canvas to receive user input.
 
 // Now that the canvas element has been prepared, we can add it to the DOM.
 document.body.prepend(canvas);
@@ -50,12 +53,17 @@ document.body.prepend(canvas);
 const playState = new PlayState(loadedLevels);
 stateMachine.add(GameStateName.Play, playState);
 
-stateMachine.add(
-    GameStateName.Link,
-    new LinkCreationState(playState)
-);
+stateMachine.add(GameStateName.Link, new LinkCreationState(playState));
 
-stateMachine.change(GameStateName.Play);
+stateMachine.add(
+  GameStateName.LevelTransition,
+  new LevelTransitionState(playState)
+);
+stateMachine.add(GameStateName.MainMenu, new MainMenuState());
+stateMachine.add(GameStateName.Pause, new PauseMenuState());
+
+
+stateMachine.change(GameStateName.MainMenu);
 
 const game = new Game(stateMachine, context, canvas.width, canvas.height);
 
