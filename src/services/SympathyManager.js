@@ -14,7 +14,7 @@ export default class SympathyManager {
 
     this.firstSelection = null;
     this.secondSelection = null;
-
+    this.inputCooldown = 0;
     this.links = [];
   }
 
@@ -52,12 +52,9 @@ export default class SympathyManager {
   }
 
   update(dt) {
-    if (input.isKeyPressed(Input.KEYS.ESCAPE)) {
-      console.log("SCREAM");
-      this.breakLink();
-      this.exit();
-      return;
-    }
+    this.inputCooldown -= dt;
+    if (this.inputCooldown > 0) return;
+
     if (this.activeLink) {
       if (input.isKeyPressed(Input.KEYS.ENTER)) {
         this.breakLink();
@@ -76,18 +73,24 @@ export default class SympathyManager {
     if (this.viableObjects.length === 0) return;
 
     if (input.isKeyPressed(Input.KEYS.ARROW_RIGHT)) {
+      console.log("RIGHT ARROW TRIGGERED");
+
+      sounds.play(MusicName.Click);
+
       this.selectionIndex =
         (this.selectionIndex + 1) % this.viableObjects.length;
       this.updateHighlight();
     }
 
     if (input.isKeyPressed(Input.KEYS.ARROW_LEFT)) {
+      console.log("LEFT ARROW TRIGGERED");
+
+      sounds.play(MusicName.Click);
       this.selectionIndex =
         (this.selectionIndex - 1 + this.viableObjects.length) %
         this.viableObjects.length;
       this.updateHighlight();
 
-      console.log(this.selectionIndex);
     }
 
     if (input.isKeyPressed(Input.KEYS.ENTER)) {

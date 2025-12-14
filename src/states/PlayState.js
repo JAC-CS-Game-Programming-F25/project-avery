@@ -37,9 +37,8 @@ export default class PlayState extends State {
     this.levels = loadedLevels;
     this.levelOrder = Object.keys(loadedLevels);
     this.currentLevelIndex = 0;
-
+    this.mainMusicStarted = false;
     this.justLoadedLevel = false;
-
     // Fade / death juice
     this.isFadingOut = false;
     this.fade = { alpha: 0 };
@@ -118,18 +117,13 @@ export default class PlayState extends State {
     timer.update(dt);
     this.debug.update();
 
-    if (
-      input.isKeyPressed(Input.KEYS.ESCAPE) &&
-      !this.sympathyManager.active &&
-      !this.sympathyManager.hasActiveLink()
-    ) {
-      this.stateMachine.change(GameStateName.Pause, {
-        playState: this,
-      });
-      return;
+    if (input.isKeyPressed(Input.KEYS.ESCAPE)) {
+      if (this.sympathyManager.active || this.sympathyManager.hasActiveLink()) {
+        this.sympathyManager.breakLink();
+      } else {
+        this.stateMachine.change(GameStateName.Pause, { playState: this });
+      }
     }
-
-    // Music
     if (sounds.sounds.intro.isEnded() && !this.mainMusicStarted) {
       this.mainMusicStarted = true;
       sounds.play(MusicName.Main);
@@ -153,9 +147,6 @@ export default class PlayState extends State {
       this.sympathyManager.update(dt);
       return;
     }
-
-    // Link exists? Update it, but DO NOT freeze world
-    this.sympathyManager.update(dt);
 
     // --- Normal gameplay ---
     this.map.update(dt);

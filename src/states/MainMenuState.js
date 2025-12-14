@@ -1,7 +1,8 @@
 import State from "../../lib/State.js";
 import Input from "../../lib/Input.js";
-import { canvas, context, input } from "../globals.js";
+import { canvas, context, input, sounds } from "../globals.js";
 import GameStateName from "../enums/GameStateName.js";
+import MusicName from "../enums/MusicName.js";
 
 export default class MainMenuState extends State {
   constructor() {
@@ -9,7 +10,11 @@ export default class MainMenuState extends State {
     this.options = ["Start Game", "Quit"];
     this.selectedIndex = 0;
   }
-
+  enter(){
+    super.enter()
+    sounds.play(MusicName.Intro)
+  }
+  
   update(dt) {
     if (input.isKeyPressed(Input.KEYS.ARROW_UP)) {
       this.selectedIndex =

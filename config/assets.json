@@ -30,10 +30,16 @@
     },
     {
       "name": "link",
-      "path": "...",
+      "path": "./assets/sounds/linksound.wav",
       "size": 1,
-      "volume": 0.6,
+      "volume": 0.3,
       "loop": true
+    },
+    {
+      "name": "click",
+      "path": "./assets/sounds/bottle-lid-click.wav",
+      "size": 1,
+      "volume": 0.6
     }
   ]
 }

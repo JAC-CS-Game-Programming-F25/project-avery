@@ -12,7 +12,8 @@ export default class LinkCreationState extends State {
 
     enter() {
         console.log("Entered link state")
-        sounds.pause(MusicName.Intro);
+        sounds.stop(MusicName.Intro);
+        sounds.play(MusicName.Link)
         this.sympathyManager.enter();
     }
 
@@ -34,6 +35,7 @@ export default class LinkCreationState extends State {
 
     exit() {
         console.log("Exited link state")
+        sounds.stop(MusicName.Link);
         sounds.play(MusicName.Intro);
         this.sympathyManager.exit();
     }
