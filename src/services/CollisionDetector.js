@@ -59,7 +59,7 @@ export default class CollisionDetector {
 
 		// IMPORTANT: do not force isOnGround false here if Map/platform system handles it
 		// But if tile collision is your ground source, keep this:
-		entity.isOnGround = false;
+		// entity.isOnGround = false;
 
 		if (entity.velocity.y >= 0) {
 			// Falling / grounded: check row below bottom edge

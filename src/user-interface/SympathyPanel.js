@@ -22,7 +22,7 @@ export default class SympathyPanel extends Panel {
     render() {
         if (!this.isVisible) return;
 
-        super.render();
+        // super.render();
         this.renderConcentration();
         this.renderLinkInfo();
     }
@@ -30,7 +30,7 @@ export default class SympathyPanel extends Panel {
     renderConcentration() {
         const padding = this.padding;
         const barX = this.position.x + padding - 15;
-        const barY = this.position.y + padding + 25;
+        const barY = this.position.y + padding;
         const barWidth = this.dimensions.x - padding * 2;
         const barHeight = 10;
 

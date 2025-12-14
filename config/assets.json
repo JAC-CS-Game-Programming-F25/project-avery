@@ -7,18 +7,6 @@
 			"height": 48
 		},
 		{
-			"name": "schoolGirl3Idle",
-			"path": "./assets/images/Girl_3/Idle.png",
-			"width": 1004,
-			"height": 3618
-		},
-				{
-			"name": "schoolGirl1Walk",
-			"path": "./assets/images/Girl_3/Idle.png",
-			"width": 1004,
-			"height": 3618
-		},
-		{
 			"name": "background",
 			"path": "./assets/images/medievalBackground.webp",
 			"width": 512,
@@ -32,13 +20,13 @@
 			"name": "intro",
 			"path": "./assets/sounds/gameIntro.wav",
 			"size": 1,
-			"volume": 1
+			"volume": 0.5
 		},
 		{
 			"name": "main",
 			"path": "./assets/sounds/mainTrack.wav",
 			"size": 1,
-			"volume": 1
+			"volume": 0.5
 		}
 	]
 }

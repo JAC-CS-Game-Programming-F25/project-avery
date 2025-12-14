@@ -13,7 +13,6 @@ export default class SympathyLink {
         this.objectB = objectB;
 
         this.similarity = this._calculateSimilarity();
-        // this.efficiency = this.calculateEfficiency();
         this.lossFactor = 1 - this.similarity;
 
         this.active = true;

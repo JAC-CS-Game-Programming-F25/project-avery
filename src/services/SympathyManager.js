@@ -25,7 +25,9 @@ export default class SympathyManager{
         this.activeLink = new SympathyLink(obj1, obj2);
 
         this.activeLink.objectA.sympathyLinkedItem = this.activeLink.objectB;
+        this.activeLink.objectA.link = this.activeLink;
         this.activeLink.objectB.sympathyLinkedItem = this.activeLink.objectA;
+        this.activeLink.objectB.link = this.activeLink;
 
         return true;
     }

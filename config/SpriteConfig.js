@@ -5,15 +5,25 @@ import Sprite from "../lib/Sprite.js";
 
 export const playerSpriteConfig = {
     idle: {
-        path: "./assets/images/Girl_3/Idle.png",
+        path: "./assets/images/Wizard/Idle.png",
         frameWidth: 128,
         frameHeight: 128,
     },
     walk: {
-        path: "./assets/images/Girl_3/Walk.png",
+        path: "./assets/images/Wizard/Walk.png",
         frameWidth: 128,
         frameHeight: 128,
     },
+    jump: {
+        path: "./assets/images/Wizard/Jump.png",
+        frameWidth: 128,
+        frameHeight: 128,
+    },
+    fall: {
+        path: "./assets/images/Wizard/Walk.png",
+        frameWidth: 128,
+        frameHeight: 128,
+    }
 };
 
 // -----------------------
@@ -68,6 +78,9 @@ function loadImage(src) {
 export const objectSpriteConfig = {
     Crate: [
         { x: 48, y: 0, width: 16, height: 16 },
+    ],
+    Barrel: [
+        { x: 64, y: 0, width: 16, height: 16 }
     ],
     platform: [
         { x: 16, y: 16, width: 16, height: 16 },

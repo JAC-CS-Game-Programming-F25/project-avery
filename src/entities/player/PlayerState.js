@@ -37,8 +37,8 @@ export default class PlayerState extends State {
         const dy = this.player.velocity.y * dt;
         this.player.position.y += dy;
         this.collisionDetector.checkVerticalCollisions(this.player);
+        this.player.map.resolveGameObjectCollisions(this.player);
 
-        // Clamp to map bounds
         const maxX =
             this.player.map.width * 16 -
             (this.player.hitboxOffset.x + this.player.hitboxWidth);

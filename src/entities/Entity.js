@@ -59,18 +59,18 @@ export default class Entity {
 	 * @param {Entity} entity - The other entity to check collision direction with.
 	 * @returns {number} The collision direction.
 	 */
-getCollisionDirection(entity) {
-    return getCollisionDirection(
-        this.hitboxX,
-        this.hitboxY,
-        this.hitboxWidth,
-        this.hitboxHeight,
-        entity.hitboxX,
-        entity.hitboxY,
-        entity.hitboxWidth,
-        entity.hitboxHeight
-    );
-}
+	getCollisionDirection(entity) {
+		return getCollisionDirection(
+			this.hitboxX,
+			this.hitboxY,
+			this.hitboxWidth,
+			this.hitboxHeight,
+			entity.hitboxX,
+			entity.hitboxY,
+			entity.hitboxWidth,
+			entity.hitboxHeight
+		);
+	}
 
 
 	renderHitbox(context, colour = "rgba(255, 0, 0, 0.6)") {

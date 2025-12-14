@@ -32,7 +32,7 @@ export default class PlayState extends State {
 
         // Background image pulled from Images system
         this.backgroundImage = images.get(ImageName.Background);
-
+        this.mainMusicStarted = false;
         // Parallax background layers
         this.parallaxLayers = [
             { image: this.backgroundImage, speedX: 0.04, speedY: 0.1 },
@@ -51,8 +51,9 @@ export default class PlayState extends State {
         timer.update(dt);
         this.debug.update();
         
-        if (this.sounds[MusicName.Intro].isEnded()){
-            console.log("DOOOOOOOOM ")
+        if (sounds.sounds.intro.isEnded() && !this.mainMusicStarted){
+            this.mainMusicStarted = true;
+            sounds.play(MusicName.Main)
         }
         if (this.sympathyManager.active) {
             this.sympathyManager.update(dt);

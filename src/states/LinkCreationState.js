@@ -27,11 +27,8 @@ export default class LinkCreationState extends State {
     }
  
     render(ctx) {
-        // Render frozen world
         this.playState.render(ctx);
 
-        // Overlay sympathy UI
-        this.playState.renderSympathySelection(ctx);
         this.playState.renderSympathyLinks(ctx);
     }
 

@@ -6,7 +6,7 @@ import ImageName from "../../enums/ImageName.js";
 
 export default class GameObject extends Entity{
     
-    constructor(x, y, map, width, height, type, mass, temp, sprites) {
+    constructor({x, y, map, width, height, type, mass, temp, sprites}) {
         super(x, y, width, height);
 
         this.map = map;
@@ -15,7 +15,6 @@ export default class GameObject extends Entity{
         this.temp = temp;
         this.width = width;
         this.height = height;
-
         this.velocity = new Vector(0, 0);
         this.forces = new Vector(0, 0);
         this.isStatic = false;
@@ -26,18 +25,27 @@ export default class GameObject extends Entity{
         this.isSelected = false;
 
         this.sympathyLinkedItem = null;
+        this.link = null;
+        this.wasOnGround = false;
+        console.log(this)
     }
 
     update(dt){
         if (this.isStatic) return;
 
-        // F = m * a → a = F / m
-        const ax = this.forces.x / this.mass;
+        const drag = this.getSympathyDragFactor();
+        const ax = this.forces.x / (this.mass * drag);
         const ay = this.forces.y / this.mass;
 
         this.velocity.x += ax * dt;
-        this.velocity.y += ay * dt;
-
+        if (ay > 0 && this.isVerticallyLocked()) {
+            this.velocity.y = 0;
+        } else {
+            this.velocity.y += ay * dt;
+        }
+        if (this.isVerticallyLocked() && this.velocity.y > 0) {
+            this.velocity.y = 0;
+        }
         this.position.x += this.velocity.x * dt;
         this.position.y += this.velocity.y * dt;
 
@@ -45,12 +53,13 @@ export default class GameObject extends Entity{
         this.forces.x = 0;
         this.forces.y = 0;
 
-        if (this.isOnGround) {
+        if (this.isOnGround || this.isVerticallyLocked()) {
             this.velocity.x *= 0.85;
             if (Math.abs(this.velocity.x) < 1) {
                 this.velocity.x = 0;
             }
         }
+        this.wasOnGround = this.isOnGround;
     }
 
     loadSprite(type) {
@@ -58,7 +67,7 @@ export default class GameObject extends Entity{
             case "Crate": {
                 const TILE_SIZE = 16;
 
-                const crateTileIndex = 5; // CHANGE THIS
+                const crateTileIndex = 5;
 
                 const tilesetGraphic = images.get(ImageName.Tiles);
 
@@ -66,6 +75,26 @@ export default class GameObject extends Entity{
 
                 const sx = (crateTileIndex % tilesPerRow) * TILE_SIZE;
                 const sy = Math.floor(crateTileIndex / tilesPerRow) * TILE_SIZE;
+
+                return new Sprite(
+                    tilesetGraphic,
+                    sx,
+                    sy,
+                    TILE_SIZE,
+                    TILE_SIZE
+                );
+            }
+            case "Barrel": {
+                const TILE_SIZE = 16;
+
+                const barrelTileIndex = 6;
+
+                const tilesetGraphic = images.get(ImageName.Tiles);
+
+                const tilesPerRow = tilesetGraphic.width / TILE_SIZE;
+
+                const sx = (barrelTileIndex % tilesPerRow) * TILE_SIZE;
+                const sy = Math.floor(barrelTileIndex / tilesPerRow) * TILE_SIZE;
 
                 return new Sprite(
                     tilesetGraphic,
@@ -110,7 +139,20 @@ export default class GameObject extends Entity{
         return this.width*this.height
     }
 
-   applyForce(force) {
+    canMoveInDirection(force) {
+        if (
+            force.y > 0 &&
+            (
+                this.wasOnGround ||
+                (this.sympathyLinkedItem && this.sympathyLinkedItem.wasOnGround)
+            )
+        ) {
+            return { x: force.x, y: 0 };
+        }
+
+        return force;
+    }
+    applyForce(force) {
         if(this.sympathyLinkedItem){
             this.sympathyLinkedItem.applySympathyForce(force)
         }
@@ -120,10 +162,25 @@ export default class GameObject extends Entity{
     }
 
     applySympathyForce(force){
-        if(force.x != 0){
-            console.log("Called")
-        }
-        this.forces.x += force.x;
-        this.forces.y += force.y;
+        const clamped = this.canMoveInDirection(force);
+        this.forces.x += clamped.x;
+        this.forces.y += clamped.y;
+    }
+
+    isVerticallyLocked() {
+        return (
+            this.sympathyLinkedItem &&
+            (
+                this.wasOnGround ||
+                this.sympathyLinkedItem.wasOnGround
+            )
+        );
+    }
+    getSympathyDragFactor() {
+        if (!this.sympathyLinkedItem) return 1;
+
+        const similarity = this.link.similarity;
+
+        return 1 + (1 - similarity);
     }
 }

@@ -41,6 +41,11 @@ export default class Map {
 				images.get(ImageName.Tiles),     
 				objectSpriteConfig.Crate        
 			),
+			Barrel: 
+			loadObjectSprites(
+				images.get(ImageName.Tiles),     
+				objectSpriteConfig.Barrel        
+			),
 		};
 		this.gameObjects = [];
 
@@ -58,17 +63,19 @@ export default class Map {
 				console.warn(`No sprites for object type: ${obj.type}`);
 				continue;
 			}
-
-			const gameObject = new GameObject(
-				obj.x,
-				obj.y - obj.height, // Tiled Y fix
-				this,
-				obj.width,
-				obj.height,
-				obj.type,
-				1,      // mass
-				20,     // temp
-				sprites
+ 			const props = this.parseProperties(obj.properties);
+			
+			const gameObject = new GameObject({
+				x: obj.x,
+				y: obj.y - obj.height, 
+				map: this,
+				width: obj.width,
+				height: obj.height,
+				type: obj.type,
+				mass: Number(props.Weight),      
+				temp: 20,     
+				sprites: sprites,}
+				
 			);
 
 			this.gameObjects.push(gameObject);
@@ -100,13 +107,15 @@ export default class Map {
 
 
 	resolveGameObjectCollisions(player) {
+		const pushStrength = 1000; 
+
 		for (const obj of this.gameObjects) {
 			if (!player.collidesWith(obj)) continue;
 
 			const dir = player.getCollisionDirection(obj);
 
 			switch (dir) {
-				case 1: { // player landed on object
+				case 1: { 
 					const penetration =
 						player.hitboxBottom - obj.hitboxY;
 
@@ -114,11 +123,13 @@ export default class Map {
 					player.velocity.y = 0;
 					player.isOnGround = true;
 
-					// TRANSFER FORCE
 					obj.applyForce({
 						x: 0,
 						y: player.mass ? player.mass * 200 : 200
 					});
+					if (player.velocity.y >= 0) {
+						player.isOnGround = true;
+					}
 					break;
 				}
 
@@ -130,9 +141,7 @@ export default class Map {
 					player.position.x += penetration;
 					player.velocity.x = 0;
 
-					// Push object
 					if (!obj.isStatic) {
-						const pushStrength = 300; // tune this
 						obj.applyForce(new Vector(-pushStrength, 0));
 
 					}
@@ -147,7 +156,6 @@ export default class Map {
 					player.velocity.x = 0;
 
 					if (!obj.isStatic) {
-						const pushStrength = 300;
 						obj.applyForce(new Vector(pushStrength, 0));
 
 					}
@@ -160,9 +168,8 @@ export default class Map {
 	resolveTileCollisions(entity) {
 		const tileSize = this.tileSize;
 
-		entity.isOnGround = false;
+		// entity.isOnGround = false;
 
-		// --- Vertical only (for now) ---
 		const bottom = entity.hitboxBottom;
 		const left = entity.hitboxX;
 		const right = entity.hitboxRight;

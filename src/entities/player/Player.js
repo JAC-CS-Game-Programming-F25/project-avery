@@ -41,13 +41,15 @@ export default class Player extends Entity {
         this.stateMachine.add(PlayerStateName.Jumping, new PlayerJumpingState(this));
         this.stateMachine.add(PlayerStateName.Falling, new PlayerFallingState(this));
     }
-
+    
     async loadSprites() {
         this.sprites = await loadPlayerSprites(playerSpriteConfig);
 
         this.animations = {
             idle: new Animation(this.sprites.idle, 0.12),
-            walk: new Animation(this.sprites.walk, 0.08)
+            walk: new Animation(this.sprites.walk, 0.08),
+            jump: new Animation(this.sprites.jump, 0.12),
+            fall: new Animation(this.sprites.jump, 0.12),
         };
 
         this.currentAnimation = this.animations.idle;

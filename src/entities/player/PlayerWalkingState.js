@@ -12,9 +12,11 @@ export default class PlayerWalkingState extends PlayerState {
         super.update(dt);
         this.handleHorizontalMovement();
 
-        // If no movement, go back to idle
         if (!input.isKeyHeld(Input.KEYS.A) && !input.isKeyHeld(Input.KEYS.D)) {
             this.player.stateMachine.change(PlayerStateName.Idling);
         }
+        if (input.isKeyHeld(Input.KEYS.SPACE)) {
+			this.player.stateMachine.change(PlayerStateName.Jumping);
+		}
     }
 }
