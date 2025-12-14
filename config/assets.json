@@ -29,87 +29,14 @@
 	"fonts": [],
 	"sounds": [
 		{
-			"name": "bump",
-			"path": "./assets/sounds/bump.wav",
-			"size": 2,
-			"volume": 1
-		},
-		{
-			"name": "coin",
-			"path": "./assets/sounds/coin.wav",
-			"size": 20,
-			"volume": 1
-		},
-		{
-			"name": "jump",
-			"path": "./assets/sounds/jump.wav",
-			"size": 2,
-			"volume": 1
-		},
-		{
-			"name": "powerup",
-			"path": "./assets/sounds/powerup.wav",
-			"size": 2,
-			"volume": 1
-		},
-		{
-			"name": "sprout-item",
-			"path": "./assets/sounds/sprout-item.wav",
-			"size": 2,
-			"volume": 1
-		},
-		{
-			"name": "stomp",
-			"path": "./assets/sounds/stomp.wav",
-			"size": 10,
-			"volume": 1
-		},
-		{
-			"name": "pipe",
-			"path": "./assets/sounds/pipe.wav",
-			"size": 2,
-			"volume": 1
-		},
-		{
-			"name": "star-low",
-			"path": "./assets/sounds/starman-low.wav",
-			"size": 2,
-			"volume": 1
-		},
-		{
-			"name": "course-clear",
-			"path": "./assets/sounds/course-clear.mp3",
+			"name": "intro",
+			"path": "./assets/sounds/gameIntro.wav",
 			"size": 1,
 			"volume": 1
 		},
 		{
-			"name": "game-over",
-			"path": "./assets/sounds/game-over.mp3",
-			"size": 1,
-			"volume": 1
-		},
-		{
-			"name": "player-down",
-			"path": "./assets/sounds/player-down.mp3",
-			"size": 1,
-			"volume": 1
-		},
-		{
-			"name": "overworld",
-			"path": "./assets/sounds/overworld.mp3",
-			"size": 1,
-			"volume": 1,
-			"loop": true
-		},
-		{
-			"name": "overworld-hurry",
-			"path": "./assets/sounds/overworld-hurry.mp3",
-			"size": 1,
-			"volume": 1
-		},
-		{
-			"name": "invincible",
-			"path": "./assets/sounds/invincible.mp3",
+			"name": "main",
+			"path": "./assets/sounds/mainTrack.wav",
 			"size": 1,
 			"volume": 1
 		}

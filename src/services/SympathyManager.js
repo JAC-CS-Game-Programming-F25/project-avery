@@ -1,6 +1,7 @@
 import Input from "../../lib/Input.js";
 import Player from "../entities/player/Player.js"; 
-import { input } from "../globals.js";
+import MusicName from "../enums/MusicName.js";
+import { input, sounds } from "../globals.js";
 import SympathyLink from "./SympathyLink.js";
 export default class SympathyManager{
     constructor(player) {
@@ -49,7 +50,10 @@ export default class SympathyManager{
     update(dt) {
        
         if (input.isKeyPressed(Input.KEYS.ESCAPE)) {
+            console.log("SCREAM")
             this.breakLink();
+            this.exit();
+            return;
         }
         if(this.activeLink){
             this.activeLink.update(this.player,dt)
@@ -129,6 +133,7 @@ export default class SympathyManager{
         this.objectB.applyForce(effectiveForce * (1 - this.lossFactor));
     }
     enter() {
+
         this.active = true;
 
         this.viableObjects = this.player.map.gameObjects.filter(

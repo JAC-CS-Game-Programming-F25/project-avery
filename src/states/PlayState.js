@@ -44,14 +44,16 @@ export default class PlayState extends State {
             this.sympathyManager
         );
 
-        sounds.play(MusicName.Overworld);
+        sounds.play(MusicName.Intro);
     }
 
     update(dt) {
         timer.update(dt);
         this.debug.update();
-
-        // --- Sympathy Mode (freeze world) ---
+        
+        if (this.sounds[MusicName.Intro].isEnded()){
+            console.log("DOOOOOOOOM ")
+        }
         if (this.sympathyManager.active) {
             this.sympathyManager.update(dt);
             return;

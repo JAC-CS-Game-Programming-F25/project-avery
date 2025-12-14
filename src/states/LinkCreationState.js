@@ -1,6 +1,7 @@
 import Input from "../../lib/Input.js";
 import State from "../../lib/State.js";
-import { input } from "../globals.js";
+import MusicName from "../enums/MusicName.js";
+import { input, sounds } from "../globals.js";
 
 export default class LinkCreationState extends State {
     constructor(playState) {
@@ -11,6 +12,7 @@ export default class LinkCreationState extends State {
 
     enter() {
         console.log("Entered link state")
+        sounds.pause(MusicName.Intro);
         this.sympathyManager.enter();
     }
 
@@ -35,7 +37,7 @@ export default class LinkCreationState extends State {
 
     exit() {
         console.log("Exited link state")
-
+        sounds.play(MusicName.Intro);
         this.sympathyManager.exit();
     }
 }
