@@ -20,27 +20,23 @@ export default class CollisionDetector {
 		const left = entity.hitboxX;
 		const right = entity.hitboxRight;
 		const top = entity.hitboxY;
-		const bottom = entity.hitboxBottom - 1; // -1 so exact edges behave nicely
+		const bottom = entity.hitboxBottom - 1;
 
 		const tileTop = Math.floor(top / tileSize);
 		const tileBottom = Math.floor(bottom / tileSize);
 
 		if (entity.velocity.x > 0) {
-			// Moving RIGHT: test the column we are entering (right edge)
 			const tileRight = Math.floor(right / tileSize);
 
 			if (this.isSolidTileInColumn(tileRight, tileTop, tileBottom)) {
-				// Push player left so hitbox right sits flush with tile left edge
 				const tileLeftEdge = tileRight * tileSize;
 				entity.position.x = tileLeftEdge - (entity.hitboxOffset.x + entity.hitboxWidth);
 				entity.velocity.x = 0;
 			}
 		} else if (entity.velocity.x < 0) {
-			// Moving LEFT: test the column we are entering (left edge)
 			const tileLeft = Math.floor(left / tileSize);
 
 			if (this.isSolidTileInColumn(tileLeft, tileTop, tileBottom)) {
-				// Push player right so hitbox left sits flush with tile right edge
 				const tileRightEdge = (tileLeft + 1) * tileSize;
 				entity.position.x = tileRightEdge - entity.hitboxOffset.x;
 				entity.velocity.x = 0;
@@ -53,7 +49,7 @@ export default class CollisionDetector {
 
 		// Use HITBOX bounds
 		const left = entity.hitboxX;
-		const right = entity.hitboxRight - 1; // -1 so exact edges behave nicely
+		const right = entity.hitboxRight - 1; 
 		const top = entity.hitboxY;
 		const bottom = entity.hitboxBottom;
 

@@ -45,7 +45,6 @@ export default class SympathyLink {
 
     this.active = false;
 
-    // Animate link collapse
     timer.tween(this.visual, { strength: 0 }, 0.15, Easing.inCubic);
   }
 
@@ -92,14 +91,12 @@ export default class SympathyLink {
   _calculateSimilarity() {
     const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
-    // ---------- MASS ----------
     const massA = Math.max(0.001, this.objectA.mass);
     const massB = Math.max(0.001, this.objectB.mass);
 
     const massRatio = Math.min(massA, massB) / Math.max(massA, massB);
     const massScore = clamp01(massRatio);
 
-    // ---------- TEMPERATURE ----------
     const tempA = this.objectA.temp ?? 20;
     const tempB = this.objectB.temp ?? 20;
 
@@ -108,7 +105,6 @@ export default class SympathyLink {
 
     const tempScore = clamp01(1 - tempDiff / MAX_TEMP_DIFF);
 
-    // ---------- SIZE ----------
     const sizeA = Math.max(
       1,
       this.objectA.dimensions.x * this.objectA.dimensions.y
@@ -121,7 +117,6 @@ export default class SympathyLink {
     const sizeRatio = Math.min(sizeA, sizeB) / Math.max(sizeA, sizeB);
     const sizeScore = clamp01(sizeRatio);
 
-    // ---------- WEIGHTING ----------
     const WEIGHTS = {
       mass: 0.5,
       temp: 0.35,
@@ -133,7 +128,6 @@ export default class SympathyLink {
       tempScore * WEIGHTS.temp +
       sizeScore * WEIGHTS.size;
 
-    // ---------- CLAMP ----------
     similarity = Math.max(
       SympathyLink.LOWER_SIM_CLAMP,
       Math.min(similarity, SympathyLink.UPPER_SIM_CLAMP)

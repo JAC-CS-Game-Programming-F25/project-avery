@@ -1,6 +1,5 @@
 import Sprite from "../../lib/Sprite.js";
 import ImageName from "../enums/ImageName.js";
-import Tile from "./Tile.js";
 import Layer from "./Layer.js";
 import { debugOptions, images } from "../globals.js";
 import GameObjectFactory from "./GameObjectFactory.js";
@@ -38,10 +37,10 @@ export default class Map {
         if (layer.name === "Collision") {
           this.collisionLayer = tileLayer;
         } else {
-          this.tileLayers.push(tileLayer); // visual / foreground only
+          this.tileLayers.push(tileLayer); 
         }
       }
-      console.log(layer.type);
+      //Seperates things into groups
       if (layer.type === "objectgroup" && layer.name === "Objects") {
         this.objectLayer = layer;
         console.log(this.objectLayer);
@@ -77,11 +76,9 @@ export default class Map {
     obj.temp += (AMBIENT - obj.temp) * RATE * dt * 0.01;
   }
   applyTemperatureZones(dt) {
-    // console.log(this.tempZones)
     for (const obj of this.gameObjects) {
       for (const zone of this.tempZones) {
         if (!this.objectInsideZone(obj, zone)) continue;
-        console.log("HIT");
         const props = this.parseProperties(zone.properties);
         const deltaPerSecond = Number(props.TempDelta ?? 0);
 
@@ -89,11 +86,9 @@ export default class Map {
 
         const appliedDelta = deltaPerSecond * dt;
 
-        // Apply to object inside zone
         console.log(`APPLIED DELTA ${appliedDelta}`);
         obj.temp += appliedDelta;
 
-        // Sympathy transfer
         if (obj.link) {
           obj.link.transferHeat(obj, appliedDelta);
         }
@@ -225,7 +220,6 @@ export default class Map {
 
       ctx.save();
 
-      // Heat vs cold
       ctx.fillStyle =
         delta > 0
           ? "rgba(255, 120, 40, 0.25)" // heat zone
@@ -233,7 +227,6 @@ export default class Map {
 
       ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
 
-      // Subtle animated shimmer
       ctx.strokeStyle =
         delta > 0 ? "rgba(255, 180, 80, 0.6)" : "rgba(120, 180, 255, 0.6)";
 
@@ -326,9 +319,7 @@ export default class Map {
     }
   }
 
-  /**
-   * FIXED — now passes `context` to layer
-   */
+
   render(context) {
     for (const layer of this.tileLayers) {
       layer.render(context);

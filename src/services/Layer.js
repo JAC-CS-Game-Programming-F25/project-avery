@@ -10,9 +10,6 @@ export default class Layer {
         this.height = layerDefinition.height;
 	}
 
-	/**
-	 * FIXED — must receive (context) and pass it to Tile.render()
-	 */
 	render(context) {
 		for (let y = 0; y < this.height; y++) {
 			for (let x = 0; x < this.width; x++) {

@@ -3,6 +3,9 @@ import Player from "../entities/player/Player.js";
 import MusicName from "../enums/MusicName.js";
 import { input, sounds } from "../globals.js";
 import SympathyLink from "./SympathyLink.js";
+
+//NOTE: this is my fav class 
+
 export default class SympathyManager {
   constructor(player) {
     this.player = player;
@@ -18,6 +21,7 @@ export default class SympathyManager {
     this.links = [];
   }
 
+  ///Creates the link and makes sure EVERYBODY knows it
   createLink(obj1, obj2) {
     if (this.activeLink) return false;
     if (!this.player.canUseSympathy()) return false;
@@ -32,6 +36,7 @@ export default class SympathyManager {
     return true;
   }
 
+  ///Very messy breakup, breaks all connections
   breakLink() {
     if (!this.activeLink) return;
 
@@ -51,7 +56,9 @@ export default class SympathyManager {
     this.exit();
   }
 
+
   update(dt) {
+    //Input cooldown otherwise it got spammed and glitched 
     this.inputCooldown -= dt;
     if (this.inputCooldown > 0) return;
 
@@ -72,8 +79,8 @@ export default class SympathyManager {
     if (!this.active) return;
     if (this.viableObjects.length === 0) return;
 
+    //Cycling through viable objects
     if (input.isKeyPressed(Input.KEYS.ARROW_RIGHT)) {
-      console.log("RIGHT ARROW TRIGGERED");
 
       sounds.play(MusicName.Click);
 
@@ -83,7 +90,6 @@ export default class SympathyManager {
     }
 
     if (input.isKeyPressed(Input.KEYS.ARROW_LEFT)) {
-      console.log("LEFT ARROW TRIGGERED");
 
       sounds.play(MusicName.Click);
       this.selectionIndex =
@@ -97,6 +103,8 @@ export default class SympathyManager {
       this.confirmSelection();
     }
   }
+
+  //Highlights selected objects
   updateHighlight() {
     for (const obj of this.viableObjects) {
       obj.isHighlighted = false;

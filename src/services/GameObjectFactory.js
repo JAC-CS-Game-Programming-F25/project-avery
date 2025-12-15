@@ -7,13 +7,13 @@ export default class GameObjectFactory {
 
     const baseConfig = {
       x: objDef.x,
-      y: objDef.y - objDef.height, // Tiled Y fix
+      y: objDef.y - objDef.height, 
       width: objDef.width,
       height: objDef.height,
       map,
       mass: Number(properties.Weight ?? 1),
       temp: Number(properties.Temp ?? 20),
-      sprite: sprites[0], // ✅ single sprite
+      sprite: sprites[0], 
       type: objDef.type,
     };
 

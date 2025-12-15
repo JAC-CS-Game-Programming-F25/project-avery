@@ -1,5 +1,6 @@
 import GameObject from "./GameObject.js";
 
+//NOTE: This is a theoretical class, it never actually gets used because I ran out of time but it's designed to work with a few tweaks 
 export default class CollectableObject extends GameObject {
     constructor(config) {
         super(config);
@@ -17,6 +18,5 @@ export default class CollectableObject extends GameObject {
 
         this.map.removeGameObject(this);
 
-        player.addScore?.(this.value);
     }
 }
