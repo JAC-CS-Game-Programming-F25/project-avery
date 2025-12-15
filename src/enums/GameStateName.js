@@ -5,6 +5,8 @@ const GameStateName = {
 
   MainMenu: "main-menu",
   Pause: "pause-menu",
+
+  Victory: 'victory'
 };
 
 export default GameStateName;

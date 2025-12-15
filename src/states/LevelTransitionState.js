@@ -1,50 +1,52 @@
-import State from '../../lib/State.js';
-import GameStateName from '../enums/GameStateName.js';
+import State from "../../lib/State.js";
+import GameStateName from "../enums/GameStateName.js";
 
 export default class LevelTransitionState extends State {
-    constructor(playState) {
-        super();
-        this.playState = playState;
+  constructor(playState) {
+    super();
+    this.playState = playState;
 
-        this.targetLevelIndex = null;
-        this.timer = 0;
-        this.duration = 0.1; // seconds (can be 0 for instant)
+    this.targetLevelIndex = null;
+    this.timer = 0;
+    this.duration = 0.1;
+  }
+
+  enter(params) {
+    this.targetLevelIndex = params.levelIndex;
+    this.timer = 0;
+
+    this.playState.sympathyManager.reset();
+  }
+
+  update(dt) {
+    this.timer += dt;
+
+    if (this.timer >= this.duration) {
+      const result = this.playState.loadLevelByIndex(this.targetLevelIndex);
+
+      if (result === "victory") return;
+
+      this.stateMachine.change(GameStateName.Play);
+      return;
     }
+  }
 
-    /**
-     * Called when entering the transition state
-     */
-    enter(params) {
+  render(context) {
+    const t = Math.min(this.timer / this.duration, 1);
 
-        this.targetLevelIndex = params.levelIndex;
-        this.timer = 0;
+    const alpha =
+      t < 0.5
+        ? t * 2 
+        : (1 - t) * 2; 
 
-        // Immediately stop any active systems if needed
-        this.playState.sympathyManager.reset();
-    }
+    context.save();
+    context.globalAlpha = alpha;
+    context.fillStyle = "#000";
+    context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+    context.restore();
+  }
 
-    update(dt) {
-        this.timer += dt;
-
-        // Perform the level swap ONCE
-        if (this.timer >= this.duration) {
-            this.playState.loadLevelByIndex(this.targetLevelIndex);
-
-            // Return to play state cleanly
-            this.stateMachine.change(GameStateName.Play);
-        }
-    }
-
-    render(context) {
-        // Optional: leave blank for invisible transition
-
-        // If you want a simple fade later, this is where it goes
-        // context.fillStyle = 'rgba(0,0,0,0.5)';
-        // context.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    exit() {
- 
-        this.targetLevelIndex = null;
-    }
+  exit() {
+    this.targetLevelIndex = null;
+  }
 }

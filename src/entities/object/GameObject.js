@@ -12,11 +12,11 @@ export default class GameObject extends Entity {
   constructor({ x, y, map, width, height, type, mass, temp, sprite }) {
     super(x, y, width, height);
 
-    // Identity
+    // Important stuff
     this.map = map;
     this.type = type;
 
-    // Physics
+    // Sympathy stuff
     this.mass = Math.max(0.1, mass);
     this.velocity = new Vector(0, 0);
     this.forces = new Vector(0, 0);
@@ -24,21 +24,19 @@ export default class GameObject extends Entity {
     this.isCollidable = true;
     this.wasOnGround = false;
 
-    // Thermal system
+    // Temp
     this.temp = temp ?? 20;
     this.stress = 0;
     this.isBroken = false;
 
-    // Rendering
+    // Sprite
     this.sprite = sprite;
 
-    // Collision
     this.collisionDetector = new CollisionDetector(map);
 
-    // Spawn
+    // For respawn
     this.spawnPosition = new Vector(x, y);
 
-    // Extension flags (subclasses opt-in)
     this.isSympathyCapable = false;
     this.isCollectable = false;
   }
@@ -69,7 +67,7 @@ export default class GameObject extends Entity {
     }
 
     this.wasOnGround = this.isOnGround;
-
+    console.log(this.temp)
     this.applyThermalStress(dt);
     this.checkBreak();
   }

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2"
+     orientation="orthogonal" renderorder="right-down"
+     width="30" height="20"
+     tilewidth="16" tileheight="16"
+     infinite="0"
+     nextlayerid="5" nextobjectid="4">
+
+ <editorsettings>
+  <export target="tilemap.json" format="json"/>
+ </editorsettings>
+
+ <tileset firstgid="1" source="tiles.tsx"/>
+ <tileset firstgid="44" source="Tiles.tsx"/>
+
+ <!-- ================= COLLISION ================= -->
+ <layer id="1" name="Collision" width="30" height="20">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+</data>
+ </layer>
+
+ <!-- ================= VISUAL ================= -->
+ <layer id="2" name="Visual" width="30" height="20" visible="false">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+(repeat this exact row 19 more times)
+</data>
+ </layer>
+
+ <!-- ================= OBJECTS ================= -->
+ <objectgroup id="3" name="Objects">
+  <object id="1" type="Crate" x="96" y="256" width="16" height="16">
+   <properties>
+    <property name="Weight" type="string" value="1"/>
+   </properties>
+  </object>
+
+  <object id="2" type="Crate" x="128" y="256" width="16" height="16">
+   <properties>
+    <property name="Weight" type="string" value="1"/>
+   </properties>
+  </object>
+ </objectgroup>
+
+ <!-- ================= GOAL ================= -->
+ <objectgroup id="4" name="Triggers">
+  <object id="3" type="Goal" x="416" y="240" width="32" height="32"/>
+ </objectgroup>
+
+</map>

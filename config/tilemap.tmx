@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="9">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="20">
  <editorsettings>
-  <export target="tilemap.json" format="json"/>
+  <export target="levels/tilemap.json" format="json"/>
  </editorsettings>
  <tileset firstgid="1" source="tiles.tsx"/>
  <tileset firstgid="44" source="Tiles.tsx"/>
@@ -21,15 +21,15 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+2,2,2,2,2,2,2,2,2,2,2,6,6,6,6,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 </data>
  </layer>
- <layer id="2" name="Visual" width="30" height="20">
+ <layer id="2" name="Visual" width="30" height="20" visible="0">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -45,22 +45,64 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+2,2,2,2,2,2,2,2,2,2,2,6,6,6,6,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,11,11,1,1,1,1,1
 </data>
  </layer>
+ <objectgroup id="4" name="TempZones">
+  <object id="10" x="176" y="271.75" width="64" height="31">
+   <properties>
+    <property name="TempDelta" value="+20"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="5" name="Triggers">
+  <object id="11" type="Goal" x="450" y="223.333" width="29.3333" height="62"/>
+ </objectgroup>
  <objectgroup id="3" name="Objects">
-  <object id="1" type="Crate" x="80.7292" y="271.333" width="16" height="16"/>
-  <object id="2" type="Crate" x="144.259" y="265.833" width="16" height="16"/>
-  <object id="3" type="Crate" x="219.958" y="268.375" width="16" height="16"/>
-  <object id="4" type="Crate" x="54.7083" y="204.271" width="16" height="16" rotation="90"/>
-  <object id="5" type="Crate" x="170.333" y="205.792" width="16" height="16"/>
-  <object id="6" type="Crate" x="160.146" y="173.854" width="16" height="16"/>
-  <object id="7" type="Crate" x="190.631" y="171.672" width="16" height="16"/>
-  <object id="8" type="Crate" x="239.176" y="184.521" width="16" height="16"/>
+  <object id="12" type="Crate" x="432" y="238.875" width="16" height="16">
+   <properties>
+    <property name="Weight" value="2"/>
+   </properties>
+  </object>
+  <object id="13" type="Crate" x="432.167" y="272.25" width="16" height="16">
+   <properties>
+    <property name="Weight" value="2"/>
+   </properties>
+  </object>
+  <object id="14" type="Crate" x="432.042" y="255.542" width="16" height="16">
+   <properties>
+    <property name="Weight" value="2"/>
+   </properties>
+  </object>
+  <object id="15" type="Crate" x="432" y="222" width="16" height="16">
+   <properties>
+    <property name="Weight" value="2"/>
+   </properties>
+  </object>
+  <object id="16" type="Crate" x="150.333" y="266.333" width="16" height="16">
+   <properties>
+    <property name="Weight" value="2"/>
+   </properties>
+  </object>
+  <object id="17" type="Crate" x="80" y="269" width="16" height="16">
+   <properties>
+    <property name="Weight" value="2"/>
+   </properties>
+  </object>
+  <object id="18" type="Crate" x="284" y="270" width="16" height="16">
+   <properties>
+    <property name="Weight" value="2"/>
+   </properties>
+  </object>
+  <object id="19" type="Crate" x="332" y="272" width="16" height="16">
+   <properties>
+    <property name="Weight" value="2"/>
+   </properties>
+  </object>
  </objectgroup>
 </map>

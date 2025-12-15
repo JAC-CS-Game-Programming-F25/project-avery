@@ -11,61 +11,57 @@ export default class SympathyObject extends GameObject {
   }
 
   breakObject() {
-    // preserve base behavior
     super.breakObject();
 
-    // sympathy-specific cleanup
     this.sympathyLinkedItem = null;
     this.link = null;
   }
   canParticipateInSympathy() {
     return true;
   }
-    canMoveInDirection(force) {
-        console.log(`${this.sympathyLinkedItem !== null }&& ${this.sympathyLinkedItem.wasOnGround} && ${this.wasOnGround}`)
-        if (
-            // force.y > 0 &&
-            (
-                this.wasOnGround ||
-                (this.sympathyLinkedItem && this.sympathyLinkedItem.wasOnGround)
-            )
-        ) {
-            return { x: force.x, y: 0 };
-        }
-            console.log("HIT")
-
-        return force;
+  canMoveInDirection(force) {
+    console.log(
+      `${this.sympathyLinkedItem !== null}&& ${
+        this.sympathyLinkedItem.wasOnGround
+      } && ${this.wasOnGround}`
+    );
+    if (
+      this.wasOnGround ||
+      (this.sympathyLinkedItem && this.sympathyLinkedItem.wasOnGround)
+    ) {
+      return { x: force.x, y: 0 };
     }
-    applyForce(force) {
-        if(this.sympathyLinkedItem){
-            this.sympathyLinkedItem.applySympathyForce(force)
-        }
-        
-        this.forces.x += force.x;
-        this.forces.y += force.y;
+    console.log("HIT");
+
+    return force;
+  }
+  applyForce(force) {
+    if (this.sympathyLinkedItem) {
+      this.sympathyLinkedItem.applySympathyForce(force);
     }
 
-    applySympathyForce(force){
-        console.log(this.canMoveInDirection(force))
-        const clamped = this.canMoveInDirection(force);
-        this.forces.x += clamped.x;
-        this.forces.y += clamped.y;
-    }
+    this.forces.x += force.x;
+    this.forces.y += force.y;
+  }
 
-    isVerticallyLocked() {
-        return (
-            this.sympathyLinkedItem &&
-            (
-                this.wasOnGround ||
-                this.sympathyLinkedItem.wasOnGround
-            )
-        );
-    }
-    getSympathyDragFactor() {
-        if (!this.sympathyLinkedItem) return 1;
+  applySympathyForce(force) {
+    console.log(this.canMoveInDirection(force));
+    const clamped = this.canMoveInDirection(force);
+    this.forces.x += clamped.x;
+    this.forces.y += clamped.y;
+  }
 
-        const stressPenalty = (this.stress + this.sympathyLinkedItem.stress) * 0.5;
+  isVerticallyLocked() {
+    return (
+      this.sympathyLinkedItem &&
+      (this.wasOnGround || this.sympathyLinkedItem.wasOnGround)
+    );
+  }
+  getSympathyDragFactor() {
+    if (!this.sympathyLinkedItem) return 1;
 
-        return 1 + (1 - this.link.similarity) + stressPenalty;
-    }
+    const stressPenalty = (this.stress + this.sympathyLinkedItem.stress) * 0.5;
+
+    return 1 + (1 - this.link.similarity) + stressPenalty;
+  }
 }

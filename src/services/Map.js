@@ -30,6 +30,7 @@ export default class Map {
     this.triggers = [];
     this.objectLayer = null;
     this.tempZones = [];
+    console.log(mapDefinition.layers);
     for (const layer of mapDefinition.layers) {
       if (layer.type === "tilelayer") {
         const tileLayer = new Layer(layer, sprites);
@@ -40,12 +41,14 @@ export default class Map {
           this.tileLayers.push(tileLayer); // visual / foreground only
         }
       }
-
+      console.log(layer.type);
       if (layer.type === "objectgroup" && layer.name === "Objects") {
         this.objectLayer = layer;
+        console.log(this.objectLayer);
       }
       if (layer.type === "objectgroup" && layer.name === "TempZones") {
         this.tempZones = layer.objects;
+        console.log(this.tempZones);
       }
       if (layer.type === "objectgroup" && layer.name === "Triggers") {
         this.triggers = layer.objects;
@@ -74,10 +77,11 @@ export default class Map {
     obj.temp += (AMBIENT - obj.temp) * RATE * dt * 0.01;
   }
   applyTemperatureZones(dt) {
+    // console.log(this.tempZones)
     for (const obj of this.gameObjects) {
       for (const zone of this.tempZones) {
         if (!this.objectInsideZone(obj, zone)) continue;
-
+        console.log("HIT");
         const props = this.parseProperties(zone.properties);
         const deltaPerSecond = Number(props.TempDelta ?? 0);
 
@@ -86,6 +90,7 @@ export default class Map {
         const appliedDelta = deltaPerSecond * dt;
 
         // Apply to object inside zone
+        console.log(`APPLIED DELTA ${appliedDelta}`);
         obj.temp += appliedDelta;
 
         // Sympathy transfer
@@ -95,13 +100,48 @@ export default class Map {
       }
     }
   }
+  renderTriggers(ctx) {
+    if (!this.triggers) return;
+
+    const pulse = 0.5 + Math.sin(performance.now() * 0.004) * 0.5;
+
+    for (const trigger of this.triggers) {
+      if (trigger.type !== "Goal") continue;
+
+      ctx.save();
+
+      // --- Fill ---
+      ctx.fillStyle = `rgba(255, 215, 120, ${0.18 + pulse * 0.08})`;
+      ctx.fillRect(trigger.x, trigger.y, trigger.width, trigger.height);
+
+      // --- Border ---
+      ctx.strokeStyle = `rgba(255, 230, 160, ${0.5 + pulse * 0.3})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(trigger.x, trigger.y, trigger.width, trigger.height);
+
+      // --- Inner glow ---
+      ctx.shadowColor = "rgba(255, 200, 100, 0.6)";
+      ctx.shadowBlur = 12;
+      ctx.strokeRect(
+        trigger.x + 2,
+        trigger.y + 2,
+        trigger.width - 4,
+        trigger.height - 4
+      );
+
+      ctx.restore();
+    }
+  }
 
   objectInsideZone(obj, zone) {
+    const w = obj.width ?? obj.dimensions?.x ?? 0;
+    const h = obj.height ?? obj.dimensions?.y ?? 0;
+
     return (
       obj.position.x < zone.x + zone.width &&
-      obj.position.x + obj.width > zone.x &&
+      obj.position.x + w > zone.x &&
       obj.position.y < zone.y + zone.height &&
-      obj.position.y + obj.height > zone.y
+      obj.position.y + h > zone.y
     );
   }
 
@@ -295,7 +335,7 @@ export default class Map {
     }
 
     this.renderTempZones(context);
-
+    this.renderTriggers(context);
     for (const obj of this.gameObjects) {
       obj.render(context);
     }

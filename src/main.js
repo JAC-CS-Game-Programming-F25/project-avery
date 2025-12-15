@@ -27,11 +27,11 @@ import {
   stateMachine,
 } from "./globals.js";
 import PlayState from "./states/PlayState.js";
-import LinkCreationState from "./states/LinkCreationState.js";
 import LevelTransitionState from "./states/LevelTransitionState.js";
 import { LEVELS } from "./enums/LevelDef.js";
 import MainMenuState from "./states/MainMenuState.js";
 import PauseMenuState from "./states/PauseMenuState.js";
+import VictoryState from "./states/VictoryState.js";
 
 const loadedLevels = {};
 
@@ -44,22 +44,22 @@ for (const level of LEVELS) {
 // Set the dimensions of the play area.
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
-canvas.setAttribute("tabindex", "1"); // Allows the canvas to receive user input.
+canvas.setAttribute("tabindex", "1"); 
 
 // Now that the canvas element has been prepared, we can add it to the DOM.
 document.body.prepend(canvas);
 
-// Add all the states to the state machine.
+
 const playState = new PlayState(loadedLevels);
 stateMachine.add(GameStateName.Play, playState);
+const mainMenu = new MainMenuState()
+stateMachine.add(GameStateName.MainMenu, mainMenu );
 
-stateMachine.add(GameStateName.Link, new LinkCreationState(playState));
-
+stateMachine.add(GameStateName.Victory, new VictoryState(stateMachine));
 stateMachine.add(
   GameStateName.LevelTransition,
   new LevelTransitionState(playState)
 );
-stateMachine.add(GameStateName.MainMenu, new MainMenuState());
 stateMachine.add(GameStateName.Pause, new PauseMenuState());
 
 

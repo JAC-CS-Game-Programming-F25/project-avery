@@ -13,7 +13,12 @@
       "height": 432
     }
   ],
-  "fonts": [],
+  "fonts": [
+    {
+			"name": "Medieval",
+			"path": "./assets/fonts/font.ttf"
+		}
+  ],
   "sounds": [
     {
       "name": "intro",

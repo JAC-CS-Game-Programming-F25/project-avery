@@ -8,6 +8,7 @@ import {
   images,
   input,
   sounds,
+  stateMachine,
   timer,
 } from "../globals.js";
 import Player from "../entities/player/Player.js";
@@ -20,15 +21,7 @@ import Input from "../../lib/Input.js";
 import GameStateName from "../enums/GameStateName.js";
 import Easing from "../../lib/Easing.js";
 
-/**
- * ============================================================
- * PLAY STATE
- * ============================================================
- */
 export default class PlayState extends State {
-  /* ============================================================
-   * CONSTRUCTOR / SETUP
-   * ============================================================ */
   constructor(loadedLevels) {
     super();
 
@@ -37,9 +30,10 @@ export default class PlayState extends State {
     this.levels = loadedLevels;
     this.levelOrder = Object.keys(loadedLevels);
     this.currentLevelIndex = 0;
+
     this.mainMusicStarted = false;
     this.justLoadedLevel = false;
-    // Fade / death juice
+
     this.isFadingOut = false;
     this.fade = { alpha: 0 };
 
@@ -75,7 +69,11 @@ export default class PlayState extends State {
    * LEVEL LOADING
    * ============================================================ */
   loadLevelByIndex(index) {
-    if (index < 0 || index >= this.levelOrder.length) return;
+    if (index >= this.levelOrder.length) {
+      stateMachine.change(GameStateName.Victory);
+      return "victory";
+    }
+    if (index < 0) return "invalid";
 
     const level = this.levels[this.levelOrder[index]];
     this.currentLevelIndex = index;
@@ -87,18 +85,14 @@ export default class PlayState extends State {
     this.map = new Map(freshDefinition);
 
     for (const obj of this.map.gameObjects) {
-      if (obj.collisionDetector) {
-        obj.collisionDetector.setMap(this.map);
-      }
+      obj.collisionDetector?.setMap(this.map);
     }
 
     this.player.reset(level.spawn.x, level.spawn.y);
     this.player.map = this.map;
 
     for (const state of Object.values(this.player.stateMachine.states)) {
-      if (state.collisionDetector) {
-        state.collisionDetector.setMap(this.map);
-      }
+      state.collisionDetector?.setMap(this.map);
     }
 
     this.camera.setBounds(
@@ -108,51 +102,57 @@ export default class PlayState extends State {
 
     this.respawnYThreshold = this.map.height * Tile.SIZE + 100;
     this.justLoadedLevel = true;
+
+    return "loaded";
   }
 
   /* ============================================================
-   * UPDATE LOOP
+   * UPDATE
    * ============================================================ */
   update(dt) {
     timer.update(dt);
     this.debug.update();
 
+    //Escape is used for both pause and break link so this handles it
     if (input.isKeyPressed(Input.KEYS.ESCAPE)) {
       if (this.sympathyManager.hasActiveLink()) {
         this.sympathyManager.breakLink();
-      } else if (this.sympathyManager.active) {
-        this.sympathyManager.exit();
-      } else {
-        this.stateMachine.change(GameStateName.Pause, { playState: this });
+        return;
       }
+      if (this.sympathyManager.active) {
+        this.sympathyManager.exit();
+        return;
+      }
+      this.stateMachine.change(GameStateName.Pause, { playState: this });
+      return;
     }
 
+    // Music
     if (sounds.sounds.intro.isEnded() && !this.mainMusicStarted) {
       this.mainMusicStarted = true;
       sounds.play(MusicName.Main);
     }
 
-    // Resolve spawn collisions
+    // I had a lot of issues with level loading so this handles it more or less smoothly
     if (this.justLoadedLevel) {
       this.map.resolveTileCollisions(this.player);
       this.player.velocity.y = 0;
       this.justLoadedLevel = false;
     }
 
-    // Fade takes priority
     if (this.isFadingOut) {
       this.checkDeathFall();
       return;
     }
 
+    // I had a state for this and then it became way too tightly coupled so like yah it just lives here cause it'll never be used without
     this.sympathyManager.update(dt);
 
-    // If in sympathy mode, freeze the world
     if (this.sympathyManager.active) {
       return;
     }
 
-    // --- Normal gameplay ---
+    // After all the checks and various other things we just  update everything and then handle sympathy
     this.map.update(dt);
     this.camera.update(dt);
 
@@ -164,178 +164,75 @@ export default class PlayState extends State {
     this.checkGoalTrigger();
     this.checkDeathFall();
 
-    // Enter Sympathy
     if (
       input.isKeyPressed(Input.KEYS.ENTER) &&
       !this.sympathyManager.active &&
       !this.sympathyManager.hasActiveLink()
     ) {
-      this.stateMachine.change(GameStateName.Link, {
-        returnState: GameStateName.Play,
-      });
+      this.sympathyManager.enter();
     }
   }
 
   /* ============================================================
-   * RENDER LOOP
+   * RENDER
    * ============================================================ */
-  render(context) {
-    // 🟦 1. CLEAR + SKY (screen space)
-    this.renderSkyGradient(context);
+  render(ctx) {
+    //Otherwise background repeats itself
+    this.renderSkyGradient(ctx);
+    this.renderFallGradient(ctx, this.getFallBlend());
 
-    // 🌌 2. FALL BACKGROUND (screen space)
-    this.renderFallGradient(context, this.getFallBlend());
+    this.camera.applyTransform(ctx);
 
-    // 🌍 3. WORLD (camera space)
-    this.camera.applyTransform(context);
-
+    //Every time i removed debug literally every single this broke so here we go
     if (!debugOptions.mapGrid) {
-      this.renderParallaxBackground(context);
+      this.renderParallaxBackground(ctx);
     }
 
-    this.map.render(context);
-    this.player.render(context);
-    this.sympathyManager.render(context);
+    //Blah blah rendering stuff
+    this.map.render(ctx);
+    this.player.render(ctx);
+    this.sympathyManager.render(ctx);
+
+    //"Linkstate", just dims the screen and stuff
     if (this.sympathyManager.active) {
-      // Dim screen (camera space)
-      context.save();
-      context.fillStyle = "rgba(0, 0, 0, 0.45)";
-      context.fillRect(
+      ctx.save();
+      ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+      ctx.fillRect(
         this.camera.position.x,
         this.camera.position.y,
         canvas.width,
         canvas.height
       );
-      context.restore();
+      ctx.restore();
 
-      // Draw sympathy highlights
-      this.renderSympathySelection(context);
+      this.renderSympathySelection(ctx);
     }
-    this.camera.resetTransform(context);
 
-    // 🧠 4. UI (screen space)
+    this.camera.resetTransform(ctx);
+
     this.sympathyPanel.render();
-    this.renderFadeOverlay(context);
+    this.renderFadeOverlay(ctx);
 
-    // 🧪 5. DEBUG
     if (debugOptions.cameraCrosshair) {
-      this.renderCameraGuidelines(context);
-      this.renderLookahead(context);
-    }
-
-    if (debugOptions.watchPanel) {
-      this.setDebugPanel();
-    } else {
-      this.debug.unwatch("Map");
-      this.debug.unwatch("Camera");
-      this.debug.unwatch("Player");
+      this.renderCameraGuidelines(ctx);
+      this.renderLookahead(ctx);
     }
   }
 
-  /* ============================================================
-   * DEATH / FALL JUICE
-   * ============================================================ */
-  checkDeathFall() {
-    if (this.isFadingOut) return;
-
-    if (this.player.position.y > this.respawnYThreshold) {
-      this.triggerDeathReset();
-    }
-  }
-
-  triggerDeathReset() {
-    if (this.isFadingOut) return;
-
-    this.isFadingOut = true;
-    this.fade.alpha = 0;
-
-    this.player.velocity.x = 0;
-    this.player.velocity.y = 0;
-
-    this.camera.startShake?.(8, 0.3);
-
-    timer.tween(this.fade, { alpha: 1 }, 0.35, Easing.outCubic, () => {
-      const spawn = this.levels[this.levelOrder[this.currentLevelIndex]].spawn;
-
-      this.player.reset(spawn.x, spawn.y);
-      this.player.map = this.map;
-
-      timer.tween(this.fade, { alpha: 0 }, 0.35, Easing.inCubic, () => {
-        this.isFadingOut = false;
-      });
-    });
-  }
-
+  //Part of the background
   getFallBlend() {
     const start = this.map.height * Tile.SIZE - canvas.height * 0.5;
     const end = this.respawnYThreshold;
+
     return Math.max(
       0,
       Math.min(1, (this.player.position.y - start) / (end - start))
     );
   }
-
   /* ============================================================
-   * BACKGROUNDS
+   * GOAL / DEATH
    * ============================================================ */
-  renderSkyGradient(context) {
-    const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, "#6ec6ff");
-    gradient.addColorStop(0.6, "#cfe9ff");
-    gradient.addColorStop(1, "#ffffff");
-
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-  }
-
-  renderFallGradient(context, alpha) {
-    if (alpha <= 0) return;
-
-    context.save();
-    context.globalAlpha = alpha;
-
-    const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, "#2b1b3d");
-    gradient.addColorStop(0.5, "#12081f");
-    gradient.addColorStop(1, "#000000");
-
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    context.restore();
-  }
-
-  renderParallaxBackground(context) {
-    this.parallaxLayers.forEach((layer) => {
-      const parallaxX = -this.camera.position.x * layer.speedX;
-      const rawY = -this.camera.position.y * layer.speedY;
-
-      const maxY = 0;
-      const minY = canvas.height - layer.image.height;
-      const parallaxY = Math.max(minY, Math.min(maxY, rawY));
-
-      const repsX = Math.ceil(canvas.width / layer.image.width) + 1;
-
-      for (let x = 0; x < repsX; x++) {
-        const drawX = (parallaxX % layer.image.width) + x * layer.image.width;
-        layer.image.render(context, drawX, parallaxY);
-      }
-    });
-  }
-
-  renderFadeOverlay(context) {
-    if (this.fade.alpha <= 0) return;
-
-    context.save();
-    context.globalAlpha = this.fade.alpha;
-    context.fillStyle = "#000";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.restore();
-  }
-
-  /* ============================================================
-   * GOALS
-   * ============================================================ */
+  ///Checking if you interact with a goal object and then pushes you to the next level
   checkGoalTrigger() {
     if (!this.map.triggers) return;
 
@@ -360,44 +257,40 @@ export default class PlayState extends State {
     }
   }
 
-  /* ============================================================
-   * DEBUG
-   * ============================================================ */
-  renderLookahead(context) {
-    const pos = this.camera.getLookaheadPosition();
-    context.strokeStyle = "red";
-    context.beginPath();
-    context.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
-    context.stroke();
+  ///Checks if you've fallen off the map and handles it
+  checkDeathFall() {
+    if (this.player.position.y > this.respawnYThreshold) {
+      this.triggerDeathReset();
+    }
   }
 
-  renderCameraGuidelines(context) {
-    context.setLineDash([5, 5]);
-    context.strokeStyle = "white";
-    context.beginPath();
-    context.moveTo(canvas.width / 2, 0);
-    context.lineTo(canvas.width / 2, canvas.height);
-    context.stroke();
-    context.setLineDash([]);
-  }
+  ///On 'dying' it just resets you to the beginning of the map. NOTE: this is a temporary solution since death will be added but this is a more forgiving feel for a demo and early levels
+  triggerDeathReset() {
+    if (this.isFadingOut) return;
 
-  setDebugPanel() {
-    this.debug.watch("Player", {
-      position: () =>
-        `(${this.player.position.x.toFixed(
-          1
-        )}, ${this.player.position.y.toFixed(1)})`,
-      velocity: () =>
-        `(${this.player.velocity.x.toFixed(
-          1
-        )}, ${this.player.velocity.y.toFixed(1)})`,
-      onGround: () => this.player.isOnGround,
+    this.isFadingOut = true;
+    this.fade.alpha = 0;
+
+    this.player.velocity.x = 0;
+    this.player.velocity.y = 0;
+
+    this.camera.startShake?.(8, 0.3);
+
+    timer.tween(this.fade, { alpha: 1 }, 0.35, Easing.outCubic, () => {
+      const spawn = this.levels[this.levelOrder[this.currentLevelIndex]].spawn;
+
+      this.player.reset(spawn.x, spawn.y);
+      this.player.map = this.map;
+
+      timer.tween(this.fade, { alpha: 0 }, 0.35, Easing.inCubic, () => {
+        this.isFadingOut = false;
+      });
     });
   }
-  renderSympathyLinks(ctx) {
-    this.sympathyManager.render(ctx);
-  }
 
+  /* ============================================================
+   * RENDER HELPERS
+   * ============================================================ */
   renderSympathySelection(ctx) {
     const mgr = this.sympathyManager;
     if (!mgr.active || mgr.viableObjects.length === 0) return;
@@ -405,7 +298,6 @@ export default class PlayState extends State {
     ctx.save();
     ctx.lineWidth = 2;
 
-    // Current selection
     const current = mgr.viableObjects[mgr.selectionIndex];
     if (current) {
       ctx.strokeStyle = "cyan";
@@ -417,7 +309,6 @@ export default class PlayState extends State {
       );
     }
 
-    // First selected object
     if (mgr.firstSelection) {
       ctx.strokeStyle = "yellow";
       ctx.strokeRect(
@@ -429,5 +320,58 @@ export default class PlayState extends State {
     }
 
     ctx.restore();
+  }
+
+  renderSkyGradient(ctx) {
+    const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    g.addColorStop(0, "#6ec6ff");
+    g.addColorStop(0.6, "#cfe9ff");
+    g.addColorStop(1, "#ffffff");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  renderFallGradient(ctx, alpha) {
+    if (alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+
+  renderParallaxBackground(ctx) {
+    this.parallaxLayers.forEach((layer) => {
+      const x = -this.camera.position.x * layer.speedX;
+      const y = -this.camera.position.y * layer.speedY;
+      layer.image.render(ctx, x, y);
+    });
+  }
+
+  renderFadeOverlay(ctx) {
+    if (this.fade.alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = this.fade.alpha;
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+
+  renderLookahead(ctx) {
+    const pos = this.camera.getLookaheadPosition();
+    ctx.strokeStyle = "red";
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  renderCameraGuidelines(ctx) {
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = "white";
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, canvas.height);
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
 }

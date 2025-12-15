@@ -14,16 +14,13 @@ export default class SympathyLink {
 
     this.active = true;
 
-    // Calculate similarity once at creation
     this.similarity = this._calculateSimilarity();
 
-    // Visual-only state (safe for tweening)
     this.visual = {
-      strength: 0, // fades in/out
-      pulse: 0, // micro animation
+      strength: 0, 
+      pulse: 0,
     };
 
-    // Animate link appearing
     timer.tween(this.visual, { strength: 1 }, 0.25, Easing.outCubic);
   }
 
@@ -36,7 +33,7 @@ export default class SympathyLink {
 
     // Drain player concentration
     const drain = this.getConcentrationDrainRate() * dt;
-    player.consumeConcentration(drain),drain;
+    player.consumeConcentration(drain), drain;
 
     if (!player.canUseSympathy()) {
       this.break();
@@ -88,35 +85,61 @@ export default class SympathyLink {
   }
 
   getConcentrationDrainRate() {
-    // Worse matches drain faster
-    console.log(`sim ${this.similarity}`)
+    console.log(`sim ${this.similarity}`);
     return SympathyLink.BASE_DRAIN * (1 / this.similarity);
   }
 
   _calculateSimilarity() {
-    let score = 1;
-    console.log(`score ${score}`)
+    const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
-    // Mass similarity
-    const massDiff = Math.abs(this.objectA.mass - this.objectB.mass);
-    score -= massDiff * 0.01;
-    console.log(`score ${score}`)
+    // ---------- MASS ----------
+    const massA = Math.max(0.001, this.objectA.mass);
+    const massB = Math.max(0.001, this.objectB.mass);
 
-    // Temperature similarity
-    const tempDiff = Math.abs(this.objectA.temp - this.objectB.temp);
-    score -= tempDiff * 0.005;
-    console.log(`score ${score}`)
+    const massRatio = Math.min(massA, massB) / Math.max(massA, massB);
+    const massScore = clamp01(massRatio);
 
-    // Size similarity
-    // const sizeDiff = Math.abs(
-    //   this.objectA.calculateSize() - this.objectB.calculateSize()
-    // );
-    // score -= sizeDiff * 0.0001;
-    console.log(`score ${score}`)
-    return Math.max(
-      SympathyLink.LOWER_SIM_CLAMP,
-      Math.min(score, SympathyLink.UPPER_SIM_CLAMP)
+    // ---------- TEMPERATURE ----------
+    const tempA = this.objectA.temp ?? 20;
+    const tempB = this.objectB.temp ?? 20;
+
+    const tempDiff = Math.abs(tempA - tempB);
+    const MAX_TEMP_DIFF = 60;
+
+    const tempScore = clamp01(1 - tempDiff / MAX_TEMP_DIFF);
+
+    // ---------- SIZE ----------
+    const sizeA = Math.max(
+      1,
+      this.objectA.dimensions.x * this.objectA.dimensions.y
     );
+    const sizeB = Math.max(
+      1,
+      this.objectB.dimensions.x * this.objectB.dimensions.y
+    );
+
+    const sizeRatio = Math.min(sizeA, sizeB) / Math.max(sizeA, sizeB);
+    const sizeScore = clamp01(sizeRatio);
+
+    // ---------- WEIGHTING ----------
+    const WEIGHTS = {
+      mass: 0.5,
+      temp: 0.35,
+      size: 0.15,
+    };
+
+    let similarity =
+      massScore * WEIGHTS.mass +
+      tempScore * WEIGHTS.temp +
+      sizeScore * WEIGHTS.size;
+
+    // ---------- CLAMP ----------
+    similarity = Math.max(
+      SympathyLink.LOWER_SIM_CLAMP,
+      Math.min(similarity, SympathyLink.UPPER_SIM_CLAMP)
+    );
+
+    return similarity;
   }
 
   /* ------------------------------------------------------------------ */
@@ -134,7 +157,6 @@ export default class SympathyLink {
     const bx = b.position.x + b.dimensions.x / 2;
     const by = b.position.y + b.dimensions.y / 2;
 
-    // Subtle pulse for juice
     const pulse = 1 + Math.sin(performance.now() * 0.008) * 0.15;
 
     ctx.save();
@@ -142,13 +164,12 @@ export default class SympathyLink {
     ctx.globalAlpha = this.visual.strength;
     ctx.lineWidth = 2.5 * pulse * this.visual.strength;
 
-    // Colour communicates link quality
     ctx.strokeStyle =
       this.similarity > 0.6
-        ? "rgba(120, 200, 255, 0.9)" // strong / cold
+        ? "rgba(120, 200, 255, 0.9)" 
         : this.similarity > 0.4
-        ? "rgba(255, 200, 100, 0.9)" // unstable
-        : "rgba(255, 100, 80, 0.9)"; // weak / stressed
+        ? "rgba(255, 200, 100, 0.9)" 
+        : "rgba(255, 100, 80, 0.9)"; 
 
     ctx.beginPath();
     ctx.moveTo(ax, ay);

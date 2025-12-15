@@ -1,8 +1,5 @@
 const FontName = {
-	Joystix: 'Joystix',
-	Pokemon: 'Pokemon',
-	PowerRed: 'PowerRed',
-	PowerRedBold: 'PowerRedBold',
+	Medieval: 'Medieval'
 };
 
 export default FontName;

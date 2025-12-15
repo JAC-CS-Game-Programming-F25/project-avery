@@ -8,11 +8,11 @@ import Timer from '../lib/Timer.js';
 
 //
 // ------------------------------------------------------------
-// CANVAS SETUP
+// CANVAS SETUP (HiDPI / Resolution-Correct)
 // ------------------------------------------------------------
 //
 export const canvas = document.createElement('canvas');
-export const context = canvas.getContext('2d');
+export const context = canvas.getContext('2d', { alpha: false });
 document.body.appendChild(canvas);
 
 const assetDefinition = await fetch('./config/assets.json')
@@ -22,12 +22,17 @@ export const TILE_SIZE = 16;
 export const CANVAS_WIDTH = TILE_SIZE * 20;
 export const CANVAS_HEIGHT = TILE_SIZE * 15;
 
+// Disable blur for pixel art
+context.imageSmoothingEnabled = false;
+
 //
 // ------------------------------------------------------------
-// CANVAS AUTO-RESIZE TO FIT WINDOW + CONTROL PANEL
+// CANVAS AUTO-RESIZE (CSS) + DPI SCALING (REAL RESOLUTION)
 // ------------------------------------------------------------
 //
 const resizeCanvas = () => {
+    const dpr = window.devicePixelRatio || 1;
+
     const controlPanel = document.getElementById('controlPanel');
     const controlPanelHeight = controlPanel ? controlPanel.offsetHeight : 200;
 
@@ -37,14 +42,23 @@ const resizeCanvas = () => {
     const scaleY = availableHeight / CANVAS_HEIGHT;
     const scale = Math.min(scaleX, scaleY);
 
-    const canvasWidth = CANVAS_WIDTH * scale;
-    const canvasHeight = CANVAS_HEIGHT * scale;
+    // === CSS size (what you see) ===
+    const cssWidth = Math.floor(CANVAS_WIDTH * scale);
+    const cssHeight = Math.floor(CANVAS_HEIGHT * scale);
 
-    canvas.style.width = `${canvasWidth}px`;
-    canvas.style.height = `${canvasHeight}px`;
+    canvas.style.width = `${cssWidth}px`;
+    canvas.style.height = `${cssHeight}px`;
 
+    // === REAL pixel resolution (what you draw on) ===
+    canvas.width = Math.floor(CANVAS_WIDTH * dpr);
+    canvas.height = Math.floor(CANVAS_HEIGHT * dpr);
+
+    // Normalize coordinate system
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Keep control panel aligned
     if (controlPanel) {
-        controlPanel.style.width = `${canvasWidth}px`;
+        controlPanel.style.width = `${cssWidth}px`;
     }
 };
 
@@ -57,10 +71,7 @@ resizeCanvas();
 // ------------------------------------------------------------
 //
 export const input = new Input(canvas);
-
-// IMPORTANT: Images() NO LONGER RECEIVES THE canvas context
 export const images = new Images();
-
 export const fonts = new Fonts();
 export const stateMachine = new StateMachine();
 export const timer = new Timer();
@@ -68,7 +79,7 @@ export const sounds = new Sounds();
 
 //
 // ------------------------------------------------------------
-// REQUIRED — YOU MUST WAIT FOR ALL ASSETS TO LOAD
+// REQUIRED — WAIT FOR ASSETS
 // ------------------------------------------------------------
 //
 await sounds.load(assetDefinition.sounds);
